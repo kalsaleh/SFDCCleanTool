@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = window.location.origin.includes('localhost') 
+  ? 'http://localhost:8001' 
+  : '/api';
 
 export interface EnrichmentRequest {
   domain: string;
