@@ -58,10 +58,7 @@ class EnrichmentResponse(BaseModel):
     businessType: Optional[str] = None
     revenueModel: Optional[str] = None
     companyStage: Optional[str] = None
-    provider: str
-    founded: Optional[str] = None
-    funding: Optional[str] = None
-    fundingType: Optional[str] = None
+    tickerSymbol: Optional[str] = None
     provider: str
 
 
