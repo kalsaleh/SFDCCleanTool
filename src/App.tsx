@@ -46,7 +46,7 @@ function App() {
     enrichmentApiKey: '',
     perplexicaUrl: '',
     extendedEnrichment: false,
-    enrichmentFields: ['industry', 'vertical', 'employees', 'hq', 'founded', 'revenue'],
+    enrichmentFields: ['industry', 'vertical', 'employees', 'hq_country', 'short_description', 'revenue', 'business_type', 'revenue_model', 'company_stage'],
     useEmergentKey: true,
     operationMode: 'both'
   });
