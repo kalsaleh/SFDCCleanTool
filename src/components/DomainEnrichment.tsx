@@ -243,11 +243,8 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                 <p className="font-medium mb-1">How it works:</p>
                 <ul className="space-y-1 text-xs">
                   <li>• Extracts domains from emails or URLs</li>
-                  {provider === 'clearbit' && (
-                    <li>• Looks up company names using Clearbit API (free tier)</li>
-                  )}
                   {provider === 'openai' && (
-                    <li>• Uses GPT-4o to research companies with real-time data</li>
+                    <li>• Uses GPT-4o to research companies with real-time web data</li>
                   )}
                   {provider === 'claude' && (
                     <li>• Uses Claude 3.5 Sonnet to research companies with comprehensive analysis</li>
@@ -255,20 +252,21 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                   {provider === 'perplexica' && (
                     <li>• Uses self-hosted Perplexica with web search for current company data</li>
                   )}
-                  <li>• Matches records with the same domain (e.g., ynab.com = youneedabudget)</li>
+                  <li>• Fetches only the fields you selected for efficient processing</li>
+                  <li>• Matches records with the same domain</li>
                   <li>• Adds enriched data to your CSV export</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          {provider === 'clearbit' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          {useEmergentKey && provider !== 'perplexica' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start space-x-2">
-                <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-yellow-800">
-                  <p className="font-medium mb-1">Note:</p>
-                  <p>Free tier has rate limits. For extended firmographics, use OpenAI, Claude, or Perplexity.</p>
+                <Sparkles className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-blue-800">
+                  <p className="font-medium mb-1">Using Emergent LLM Key</p>
+                  <p>No API key setup needed! The universal key works with both OpenAI and Claude.</p>
                 </div>
               </div>
             </div>
