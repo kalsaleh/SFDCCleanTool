@@ -233,8 +233,6 @@ function App() {
             'Enriched_Revenue_Model',
             'Enriched_Company_Stage'
           ];
-            'Enriched_Funding_Type'
-          ];
           enrichedColumns.push(...possibleEnrichedFields);
           const newColumns = [...csvData.headers, ...enrichedColumns];
           setAvailableColumns(newColumns);
