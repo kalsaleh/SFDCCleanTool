@@ -394,10 +394,8 @@ async def enrich_domain(request: EnrichmentRequest):
 
 @app.post("/api/clear-cache")
 async def clear_cache():
-    """Clear the enrichment cache."""
-    from services.enrichmentService import EnrichmentService
-    EnrichmentService.clearCache()
-    return {"message": "Cache cleared successfully"}
+    """Clear the enrichment cache on backend (placeholder - cache is frontend-side)."""
+    return {"message": "Cache clear signal received", "status": "success"}
 
 
 if __name__ == "__main__":
