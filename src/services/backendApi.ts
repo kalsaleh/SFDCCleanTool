@@ -1,6 +1,5 @@
-const API_BASE_URL = window.location.origin.includes('localhost') 
-  ? 'http://localhost:8001' 
-  : '/api';
+// Use the backend on port 8001
+const API_BASE_URL = window.location.protocol + '//' + window.location.hostname + ':8001';
 
 export interface EnrichmentRequest {
   domain: string;
