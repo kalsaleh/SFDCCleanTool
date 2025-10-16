@@ -244,6 +244,7 @@ async def enrich_with_claude(domain: str, fields: List[str], api_key: str) -> En
                 businessType=parsed.get("businessType"),
                 revenueModel=parsed.get("revenueModel"),
                 companyStage=parsed.get("companyStage"),
+                tickerSymbol=parsed.get("tickerSymbol"),
                 provider="claude"
             )
         except json.JSONDecodeError as e:
