@@ -51,7 +51,9 @@ export class EnrichmentService {
         const cacheKey = `${normalized}-${provider}-${fields.join(',')}`;
         
         if (this.cache.has(cacheKey)) {
-          enrichmentMap.set(i, this.cache.get(cacheKey)!);
+          const cachedResult = this.cache.get(cacheKey)!;
+          enrichmentMap.set(i, cachedResult);
+          if (cachedResult.success) enrichedCount++;
         } else {
           // Call backend API
           const enrichment = await BackendApi.enrichDomain({
@@ -64,6 +66,7 @@ export class EnrichmentService {
 
           this.cache.set(cacheKey, enrichment);
           enrichmentMap.set(i, enrichment);
+          if (enrichment.success) enrichedCount++;
         }
       } catch (error) {
         console.error(`Error enriching row ${i}:`, error);
@@ -78,7 +81,7 @@ export class EnrichmentService {
 
       // Update progress
       if (onProgress && (i % 5 === 0 || i === totalRows - 1)) {
-        onProgress((i + 1) / totalRows);
+        onProgress((i + 1) / totalRows, enrichedCount);
       }
 
       // Rate limiting
