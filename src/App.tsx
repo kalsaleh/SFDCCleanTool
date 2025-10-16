@@ -13,6 +13,7 @@ import { CSVParser } from './utils/csvParser';
 import { FuzzyMatcher } from './utils/fuzzyMatcher';
 import { AIMatcher } from './utils/aiMatcher';
 import { EnrichmentService } from './services/enrichmentService';
+import { BackendApi } from './services/backendApi';
 import { ApiClient } from './utils/apiClient';
 import { CSVRow, MatchResult, MatchingConfig as Config, ProcessingStats } from './types';
 import * as XLSX from 'xlsx';
