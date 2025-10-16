@@ -390,14 +390,21 @@ function App() {
         result['ENRICHED_COMPANY'] = enrichment.companyName || '';
         result['ENRICHED_DOMAIN'] = enrichment.normalizedDomain || '';
         result['ENRICHED_HEADQUARTERS'] = enrichment.headquarters || '';
+        result['ENRICHED_HQ_COUNTRY'] = enrichment.hqCountry || '';
         result['ENRICHED_DESCRIPTION'] = enrichment.description || '';
+        result['ENRICHED_SHORT_DESCRIPTION'] = enrichment.shortDescription || '';
         result['ENRICHED_INDUSTRY'] = enrichment.industry || '';
         result['ENRICHED_VERTICAL'] = enrichment.vertical || '';
         result['ENRICHED_EMPLOYEE_COUNT'] = enrichment.employeeCount || '';
         result['ENRICHED_REVENUE'] = enrichment.revenue || '';
         result['ENRICHED_FOUNDED'] = enrichment.founded || '';
+        result['ENRICHED_FOUNDED_COUNTRY'] = enrichment.foundedCountry || '';
         result['ENRICHED_FUNDING'] = enrichment.funding || '';
         result['ENRICHED_FUNDING_TYPE'] = enrichment.fundingType || '';
+        result['ENRICHED_FUNDING_STAGE'] = enrichment.fundingStage || '';
+        result['ENRICHED_BUSINESS_TYPE'] = enrichment.businessType || '';
+        result['ENRICHED_REVENUE_MODEL'] = enrichment.revenueModel || '';
+        result['ENRICHED_COMPANY_STAGE'] = enrichment.companyStage || '';
       }
 
       return result;
