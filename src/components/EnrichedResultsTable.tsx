@@ -54,9 +54,6 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
     { key: 'revenueModel', label: 'Revenue Model' },
     { key: 'companyStage', label: 'Stage' },
   ];
-    { key: 'revenueModel', label: 'Revenue Model' },
-    { key: 'companyStage', label: 'Stage' },
-  ];
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
