@@ -197,57 +197,9 @@ async def enrich_with_claude(domain: str, fields: List[str], api_key: str) -> En
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Claude enrichment error: {str(e)}")
-            response = await client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "Content-Type": "application/json",
-                    "x-api-key": api_key,
-                    "anthropic-version": "2023-06-01"
-                },
-                json={
-                    "model": "claude-3-5-sonnet-20241022",
-                    "max_tokens": 1024,
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ]
-                },
-                timeout=30.0
-            )
-            
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail=f"Claude API error: {response.text}")
-            
-            data = response.json()
-            content = data.get("content", [{}])[0].get("text", "")
-            
-            if not content:
-                raise HTTPException(status_code=500, detail="No content in Claude response")
-            
-            try:
-                # Extract JSON from response
-                import re
-                json_match = re.search(r'\{[\s\S]*\}', content)
-                if not json_match:
-                    raise HTTPException(status_code=500, detail="No JSON found in Claude response")
-                
-                parsed = json.loads(json_match.group(0))
-                return EnrichmentResponse(
-                    domain=domain,
-                    companyName=parsed.get("companyName"),
-                    normalizedDomain=normalize_domain(domain),
-                    success=True,
-                    headquarters=parsed.get("headquarters"),
-                    description=parsed.get("description"),
-                    industry=parsed.get("industry"),
-                    vertical=parsed.get("vertical"),
-                    employeeCount=parsed.get("employeeCount"),
-                    revenue=parsed.get("revenue"),
-                    founded=parsed.get("founded"),
-                    funding=parsed.get("funding"),
-                    fundingType=parsed.get("fundingType"),
+
+
+async def enrich_with_perplexica(domain: str, fields: List[str], perplexica_url: str) -> EnrichmentResponse:
                     provider="claude"
                 )
             except json.JSONDecodeError:
