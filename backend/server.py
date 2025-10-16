@@ -309,6 +309,7 @@ async def enrich_with_perplexica(domain: str, fields: List[str], perplexica_url:
                         businessType=parsed.get("businessType"),
                         revenueModel=parsed.get("revenueModel"),
                         companyStage=parsed.get("companyStage"),
+                        tickerSymbol=parsed.get("tickerSymbol"),
                         provider="perplexica"
                     )
                 else:
