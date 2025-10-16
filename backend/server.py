@@ -43,11 +43,22 @@ class EnrichmentResponse(BaseModel):
     success: bool
     error: Optional[str] = None
     headquarters: Optional[str] = None
+    hqCountry: Optional[str] = None
     description: Optional[str] = None
+    shortDescription: Optional[str] = None
     industry: Optional[str] = None
     vertical: Optional[str] = None
     employeeCount: Optional[str] = None
     revenue: Optional[str] = None
+    founded: Optional[str] = None
+    foundedCountry: Optional[str] = None
+    funding: Optional[str] = None
+    fundingType: Optional[str] = None
+    fundingStage: Optional[str] = None
+    businessType: Optional[str] = None
+    revenueModel: Optional[str] = None
+    companyStage: Optional[str] = None
+    provider: str
     founded: Optional[str] = None
     funding: Optional[str] = None
     fundingType: Optional[str] = None
