@@ -153,16 +153,17 @@ function App() {
 
       if (shouldEnrich && config.domainEnrichment && config.domainColumn) {
         setCurrentStep('Enriching domains with company data...');
-        const enrichments = await DomainEnrichmentService.enrichRows(
+        const enrichments = await EnrichmentService.enrichRows(
           csvData.rows,
-          [config.domainColumn],
+          config.domainColumn,
           config.enrichmentProvider,
+          config.enrichmentFields,
+          config.useEmergentKey,
           config.enrichmentApiKey,
-          config.extendedEnrichment,
+          config.perplexicaUrl,
           (progress) => {
             setProgress(progress * 0.2);
-          },
-          config.perplexicaUrl
+          }
         );
 
         setEnrichmentData(enrichments);
