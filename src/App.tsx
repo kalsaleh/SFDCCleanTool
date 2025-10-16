@@ -335,14 +335,21 @@ function App() {
       additionalColumns.push('ENRICHED_COMPANY', 'ENRICHED_DOMAIN');
       additionalColumns.push(
         'ENRICHED_HEADQUARTERS',
+        'ENRICHED_HQ_COUNTRY',
         'ENRICHED_DESCRIPTION',
+        'ENRICHED_SHORT_DESCRIPTION',
         'ENRICHED_INDUSTRY',
         'ENRICHED_VERTICAL',
         'ENRICHED_EMPLOYEE_COUNT',
         'ENRICHED_REVENUE',
         'ENRICHED_FOUNDED',
+        'ENRICHED_FOUNDED_COUNTRY',
         'ENRICHED_FUNDING',
-        'ENRICHED_FUNDING_TYPE'
+        'ENRICHED_FUNDING_TYPE',
+        'ENRICHED_FUNDING_STAGE',
+        'ENRICHED_BUSINESS_TYPE',
+        'ENRICHED_REVENUE_MODEL',
+        'ENRICHED_COMPANY_STAGE'
       );
     }
     const enhancedHeaders = [...csvData.headers, ...additionalColumns];
