@@ -35,16 +35,23 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
 
   // Get all enriched column names
   const enrichedColumns = [
-    'Enriched_Company',
-    'Enriched_Domain',
-    'Enriched_Industry',
-    'Enriched_Vertical',
-    'Enriched_Headquarters',
-    'Enriched_Employee_Count',
-    'Enriched_Revenue',
-    'Enriched_Founded',
-    'Enriched_Funding',
-    'Enriched_Funding_Type',
+    { key: 'companyName', label: 'Company' },
+    { key: 'normalizedDomain', label: 'Domain' },
+    { key: 'industry', label: 'Industry' },
+    { key: 'vertical', label: 'Vertical' },
+    { key: 'shortDescription', label: 'Description' },
+    { key: 'headquarters', label: 'HQ' },
+    { key: 'hqCountry', label: 'HQ Country' },
+    { key: 'employeeCount', label: 'Employees' },
+    { key: 'revenue', label: 'Revenue' },
+    { key: 'founded', label: 'Founded' },
+    { key: 'foundedCountry', label: 'Founded Country' },
+    { key: 'funding', label: 'Funding' },
+    { key: 'fundingType', label: 'Funding Type' },
+    { key: 'fundingStage', label: 'Funding Stage' },
+    { key: 'businessType', label: 'Business Type' },
+    { key: 'revenueModel', label: 'Revenue Model' },
+    { key: 'companyStage', label: 'Stage' },
   ];
 
   return (
