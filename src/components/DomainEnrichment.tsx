@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Zap, AlertCircle, Key, Sparkles } from 'lucide-react';
+import { Globe, Zap, AlertCircle, Key, Sparkles, CheckSquare } from 'lucide-react';
 
 interface DomainEnrichmentProps {
   enabled: boolean;
@@ -7,14 +7,18 @@ interface DomainEnrichmentProps {
   columns: string[];
   selectedColumn: string;
   onColumnSelect: (column: string) => void;
-  provider: 'clearbit' | 'openai' | 'perplexica' | 'claude';
-  onProviderChange: (provider: 'clearbit' | 'openai' | 'perplexica' | 'claude') => void;
+  provider: 'openai' | 'perplexica' | 'claude';
+  onProviderChange: (provider: 'openai' | 'perplexica' | 'claude') => void;
   apiKey: string;
   onApiKeyChange: (apiKey: string) => void;
   perplexicaUrl?: string;
   onPerplexicaUrlChange?: (url: string) => void;
   extendedEnrichment: boolean;
   onExtendedToggle: (extended: boolean) => void;
+  enrichmentFields: string[];
+  onFieldsChange: (fields: string[]) => void;
+  useEmergentKey: boolean;
+  onUseEmergentKeyChange: (use: boolean) => void;
 }
 
 export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
