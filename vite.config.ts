@@ -5,8 +5,18 @@ export default defineConfig(({ mode }) => ({
   plugins: [react()],
   base: mode === 'production' ? '/' : '/',
   server: {
-    port: 1420,
-    strictPort: true,
+    port: 3000,
+    strictPort: false,
+    host: '0.0.0.0',
+    hmr: {
+      clientPort: 443,
+      protocol: 'wss',
+    },
+    allowedHosts: [
+      'ai-model-hub-8.preview.emergentagent.com',
+      '.preview.emergentagent.com',
+      'localhost',
+    ],
   },
   envPrefix: ['VITE_', 'TAURI_'],
   build: {
