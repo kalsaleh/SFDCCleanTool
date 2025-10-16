@@ -309,15 +309,18 @@ function App() {
       const additionalColumns = ['DUPLICATE_STATUS', 'MATCH_CONFIDENCE'];
       if (config.domainEnrichment && enrichmentData.size > 0) {
         additionalColumns.push('ENRICHED_COMPANY', 'ENRICHED_DOMAIN');
-        if (config.extendedEnrichment) {
-          additionalColumns.push(
-            'ENRICHED_HEADQUARTERS',
-            'ENRICHED_DESCRIPTION',
-            'ENRICHED_INDUSTRY',
-            'ENRICHED_EMPLOYEE_COUNT',
-            'ENRICHED_REVENUE',
-            'ENRICHED_FOUNDED'
-          );
+        // Add all possible enriched fields
+        additionalColumns.push(
+          'ENRICHED_HEADQUARTERS',
+          'ENRICHED_DESCRIPTION',
+          'ENRICHED_INDUSTRY',
+          'ENRICHED_VERTICAL',
+          'ENRICHED_EMPLOYEE_COUNT',
+          'ENRICHED_REVENUE',
+          'ENRICHED_FOUNDED',
+          'ENRICHED_FUNDING',
+          'ENRICHED_FUNDING_TYPE'
+        );
         }
       }
       const enhancedHeaders = [...csvData.headers, ...additionalColumns];
