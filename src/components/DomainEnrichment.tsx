@@ -44,11 +44,19 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
     { id: 'industry', label: 'Industry', description: 'Company industry sector' },
     { id: 'vertical', label: 'Vertical', description: 'Specific market vertical' },
     { id: 'employees', label: 'Number of Employees', description: 'Employee count range' },
-    { id: 'hq', label: 'Headquarters', description: 'HQ location' },
-    { id: 'founded', label: 'Founded', description: 'Year and location founded' },
-    { id: 'revenue', label: 'Revenue', description: 'Annual revenue (if available)' },
-    { id: 'funding', label: 'Funding', description: 'Total funding raised (if available)' },
-    { id: 'funding_type', label: 'Latest Funding Type', description: 'Latest funding round (if available)' }
+    { id: 'hq', label: 'Headquarters (Full)', description: 'Full HQ address' },
+    { id: 'hq_country', label: 'HQ Country', description: 'Country where HQ is located' },
+    { id: 'description', label: 'Description', description: 'Full company description (2-3 sentences)' },
+    { id: 'short_description', label: 'Short Description', description: 'Brief 1-sentence description' },
+    { id: 'founded', label: 'Founded Year', description: 'Year company was founded' },
+    { id: 'founded_country', label: 'Founded Country', description: 'Country where founded' },
+    { id: 'revenue', label: 'Revenue', description: 'Annual revenue range' },
+    { id: 'funding', label: 'Total Funding', description: 'Total funding raised' },
+    { id: 'funding_type', label: 'Latest Funding Type', description: 'Latest funding round type' },
+    { id: 'funding_stage', label: 'Funding Stage', description: 'Pre-seed, Series A-G, etc.' },
+    { id: 'business_type', label: 'Business Type', description: 'Digital Native / Transformed / Traditional' },
+    { id: 'revenue_model', label: 'Revenue Model', description: 'Subscription, B2B, Commission, etc.' },
+    { id: 'company_stage', label: 'Company Stage', description: 'Startup / Growth / Established' }
   ];
 
   const toggleField = (fieldId: string) => {
