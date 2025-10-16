@@ -304,30 +304,27 @@ function App() {
     ));
   }, []);
 
-  const exportResults = useCallback(() => {
-    if (!csvData) return;
+  const buildEnhancedRows = useCallback(() => {
+    if (!csvData) return { headers: [], rows: [] };
 
-    try {
-      const additionalColumns = ['DUPLICATE_STATUS', 'MATCH_CONFIDENCE'];
-      if (config.domainEnrichment && enrichmentData.size > 0) {
-        additionalColumns.push('ENRICHED_COMPANY', 'ENRICHED_DOMAIN');
-        // Add all possible enriched fields
-        additionalColumns.push(
-          'ENRICHED_HEADQUARTERS',
-          'ENRICHED_DESCRIPTION',
-          'ENRICHED_INDUSTRY',
-          'ENRICHED_VERTICAL',
-          'ENRICHED_EMPLOYEE_COUNT',
-          'ENRICHED_REVENUE',
-          'ENRICHED_FOUNDED',
-          'ENRICHED_FUNDING',
-          'ENRICHED_FUNDING_TYPE'
-        );
-      }
-      const enhancedHeaders = [...csvData.headers, ...additionalColumns];
+    const additionalColumns = ['DUPLICATE_STATUS', 'MATCH_CONFIDENCE'];
+    if (config.domainEnrichment && enrichmentData.size > 0) {
+      additionalColumns.push('ENRICHED_COMPANY', 'ENRICHED_DOMAIN');
+      additionalColumns.push(
+        'ENRICHED_HEADQUARTERS',
+        'ENRICHED_DESCRIPTION',
+        'ENRICHED_INDUSTRY',
+        'ENRICHED_VERTICAL',
+        'ENRICHED_EMPLOYEE_COUNT',
+        'ENRICHED_REVENUE',
+        'ENRICHED_FOUNDED',
+        'ENRICHED_FUNDING',
+        'ENRICHED_FUNDING_TYPE'
+      );
+    }
+    const enhancedHeaders = [...csvData.headers, ...additionalColumns];
 
     const processedRows = csvData.rows.map((row, index) => {
-      // Find if this row is involved in any matches
       const matchAsOriginal = matches.find(match => match.originalRow === row);
       const matchAsDuplicate = matches.find(match => match.duplicateRow === row);
       
@@ -335,23 +332,18 @@ function App() {
       let matchConfidence = '';
       
       if (matchAsOriginal && matchAsOriginal.action === 'delete') {
-        // This is the original record, but marked for deletion
         duplicateStatus = 'DELETE_ORIGINAL';
         matchConfidence = (matchAsOriginal.confidence * 100).toFixed(1) + '%';
       } else if (matchAsDuplicate && matchAsDuplicate.action === 'delete') {
-        // This is the duplicate record, marked for deletion
         duplicateStatus = 'DELETE_DUPLICATE';
         matchConfidence = (matchAsDuplicate.confidence * 100).toFixed(1) + '%';
       } else if (matchAsOriginal && matchAsOriginal.action === 'merge') {
-        // This record should be merged (keep as master)
         duplicateStatus = 'MERGE_MASTER';
         matchConfidence = (matchAsOriginal.confidence * 100).toFixed(1) + '%';
       } else if (matchAsDuplicate && matchAsDuplicate.action === 'merge') {
-        // This record should be merged into the original
         duplicateStatus = 'MERGE_INTO_MASTER';
         matchConfidence = (matchAsDuplicate.confidence * 100).toFixed(1) + '%';
       } else if (matchAsOriginal || matchAsDuplicate) {
-        // Match found but action is 'keep' or 'pending'
         const match = matchAsOriginal || matchAsDuplicate;
         duplicateStatus = match!.action.toUpperCase();
         matchConfidence = (match!.confidence * 100).toFixed(1) + '%';
@@ -381,21 +373,52 @@ function App() {
       return result;
     });
 
-    const csvContent = CSVParser.exportToCSV(enhancedHeaders, processedRows);
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `marked_${filename}`;
-    document.body.appendChild(a);
+    return { headers: enhancedHeaders, rows: processedRows };
+  }, [csvData, matches, config.domainEnrichment, enrichmentData]);
+
+  const exportCSV = useCallback(() => {
+    if (!csvData) return;
+
+    try {
+      const { headers, rows } = buildEnhancedRows();
+      const csvContent = CSVParser.exportToCSV(headers, rows);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `enriched_${filename}`;
+      document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      console.log('CSV export successful');
     } catch (error) {
-      console.error('Error exporting results:', error);
-      alert('Error exporting results: ' + (error instanceof Error ? error.message : String(error)));
+      console.error('Error exporting CSV:', error);
+      alert('Error exporting CSV: ' + (error instanceof Error ? error.message : String(error)));
     }
-  }, [csvData, matches, filename, config.domainEnrichment, enrichmentData]);
+  }, [csvData, filename, buildEnhancedRows]);
+
+  const exportExcel = useCallback(() => {
+    if (!csvData) return;
+
+    try {
+      const { headers, rows } = buildEnhancedRows();
+      
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+      
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Enriched Data');
+      
+      // Generate Excel file
+      XLSX.writeFile(wb, `enriched_${filename.replace('.csv', '')}.xlsx`);
+      console.log('Excel export successful');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      alert('Error exporting Excel: ' + (error instanceof Error ? error.message : String(error)));
+    }
+  }, [csvData, filename, buildEnhancedRows]);
 
   return (
     <div className="min-h-screen bg-gray-50">
