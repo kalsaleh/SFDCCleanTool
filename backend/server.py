@@ -200,18 +200,6 @@ async def enrich_with_claude(domain: str, fields: List[str], api_key: str) -> En
 
 
 async def enrich_with_perplexica(domain: str, fields: List[str], perplexica_url: str) -> EnrichmentResponse:
-                    provider="claude"
-                )
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=500, detail="Failed to parse Claude response")
-                
-        except httpx.TimeoutException:
-            raise HTTPException(status_code=504, detail="Claude API timeout")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-
-
-async def enrich_with_perplexica(domain: str, fields: List[str], perplexica_url: str) -> EnrichmentResponse:
     """Enrich domain using Perplexica API."""
     prompt = build_prompt(domain, fields)
     
