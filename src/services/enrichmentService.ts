@@ -12,10 +12,11 @@ export class EnrichmentService {
     useEmergentKey: boolean,
     customApiKey?: string,
     perplexicaUrl?: string,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number, enrichedCount: number) => void
   ): Promise<Map<number, EnrichmentResponse>> {
     const enrichmentMap = new Map<number, EnrichmentResponse>();
     const totalRows = rows.length;
+    let enrichedCount = 0;
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
