@@ -4,8 +4,9 @@ from pydantic import BaseModel
 from typing import Optional, List
 import os
 from dotenv import load_dotenv
-import httpx
 import json
+import re
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 load_dotenv()
 
