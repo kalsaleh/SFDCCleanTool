@@ -217,13 +217,22 @@ function App() {
           const enrichedColumns = ['Enriched_Company', 'Enriched_Domain'];
           const possibleEnrichedFields = [
             'Enriched_Headquarters',
+            'Enriched_HQ_Country',
             'Enriched_Description',
+            'Enriched_Short_Description',
             'Enriched_Industry',
             'Enriched_Vertical',
             'Enriched_Employee_Count',
             'Enriched_Revenue',
             'Enriched_Founded',
+            'Enriched_Founded_Country',
             'Enriched_Funding',
+            'Enriched_Funding_Type',
+            'Enriched_Funding_Stage',
+            'Enriched_Business_Type',
+            'Enriched_Revenue_Model',
+            'Enriched_Company_Stage'
+          ];
             'Enriched_Funding_Type'
           ];
           enrichedColumns.push(...possibleEnrichedFields);
