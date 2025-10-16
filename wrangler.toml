@@ -1,0 +1,22 @@
+name = "salesforce-data-cleaner"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+# Production environment
+[env.production]
+name = "salesforce-data-cleaner"
+
+# KV namespace for storing processing results
+[[env.production.kv_namespaces]]
+binding = "DATA_STORE"
+id = "REPLACE_THIS_WITH_YOUR_ACTUAL_KV_ID"
+
+# Build configuration
+[build]
+command = "npm run build"
+cwd = "."
+watch_dir = "src"
+
+# Variables (set these in Cloudflare dashboard)
+[vars]
+ENVIRONMENT = "production"

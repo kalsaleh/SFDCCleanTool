@@ -1,0 +1,190 @@
+import React from 'react';
+import { Globe, Zap, AlertCircle, Key, Sparkles } from 'lucide-react';
+
+interface DomainEnrichmentProps {
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  columns: string[];
+  selectedColumn: string;
+  onColumnSelect: (column: string) => void;
+  provider: 'clearbit' | 'openai' | 'perplexica';
+  onProviderChange: (provider: 'clearbit' | 'openai' | 'perplexica') => void;
+  apiKey: string;
+  onApiKeyChange: (apiKey: string) => void;
+  perplexicaUrl?: string;
+  onPerplexicaUrlChange?: (url: string) => void;
+  extendedEnrichment: boolean;
+  onExtendedToggle: (extended: boolean) => void;
+}
+
+export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
+  enabled,
+  onToggle,
+  columns,
+  selectedColumn,
+  onColumnSelect,
+  provider,
+  onProviderChange,
+  apiKey,
+  onApiKeyChange,
+  perplexicaUrl,
+  onPerplexicaUrlChange,
+  extendedEnrichment,
+  onExtendedToggle
+}) => {
+  const emailDomainColumns = columns.filter(col => {
+    const lower = col.toLowerCase();
+    return lower.includes('email') || lower.includes('domain') || lower.includes('website') || lower.includes('url');
+  });
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <Globe className="h-6 w-6 text-green-600" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Domain Enrichment</h3>
+            <p className="text-sm text-gray-600">Enhance matching with company information</p>
+          </div>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => onToggle(e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+        </label>
+      </div>
+
+      {enabled && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Column with Email/Domain
+            </label>
+            {emailDomainColumns.length > 0 ? (
+              <select
+                value={selectedColumn}
+                onChange={(e) => onColumnSelect(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">Select column...</option>
+                {emailDomainColumns.map(col => (
+                  <option key={col} value={col}>{col}</option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-sm text-gray-500 italic">No email/domain columns detected</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Enrichment Provider
+            </label>
+            <select
+              value={provider}
+              onChange={(e) => onProviderChange(e.target.value as any)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="clearbit">Clearbit (Free - Basic Info)</option>
+              <option value="openai">OpenAI (Requires API Key - Extended Info)</option>
+              <option value="perplexica">Perplexity (Requires API Key - Extended Info)</option>
+            </select>
+          </div>
+
+          {(provider === 'openai' || provider === 'perplexica') && (
+            <>
+              {provider === 'perplexica' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                    <Globe className="h-4 w-4" />
+                    <span>Perplexica URL</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={perplexicaUrl || ''}
+                    onChange={(e) => onPerplexicaUrlChange?.(e.target.value)}
+                    placeholder="http://localhost:3000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Enter your self-hosted Perplexica instance URL</p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                    <Key className="h-4 w-4" />
+                    <span>API Key</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => onApiKeyChange(e.target.value)}
+                    placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : 'Perplexity'} API key`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Extended Enrichment</p>
+                    <p className="text-xs text-gray-600">HQ, Description, Industry, Employee Count, Revenue, Founded</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={extendedEnrichment}
+                    onChange={(e) => onExtendedToggle(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </>
+          )}
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-start space-x-2">
+              <Zap className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-green-800">
+                <p className="font-medium mb-1">How it works:</p>
+                <ul className="space-y-1 text-xs">
+                  <li>• Extracts domains from emails or URLs</li>
+                  {provider === 'clearbit' && (
+                    <li>• Looks up company names using Clearbit API (free tier)</li>
+                  )}
+                  {provider === 'openai' && (
+                    <li>• Uses GPT-4o-mini to research companies with real-time data</li>
+                  )}
+                  {provider === 'perplexica' && (
+                    <li>• Uses self-hosted Perplexica with web search for current company data</li>
+                  )}
+                  <li>• Matches records with the same domain (e.g., ynab.com = youneedabudget)</li>
+                  <li>• Adds enriched data to your CSV export</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {provider === 'clearbit' && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-yellow-800">
+                  <p className="font-medium mb-1">Note:</p>
+                  <p>Free tier has rate limits. For extended firmographics, use OpenAI or Perplexity.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
