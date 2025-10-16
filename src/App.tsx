@@ -204,6 +204,7 @@ function App() {
             if (enrichment.businessType) enrichedRow['Enriched_Business_Type'] = enrichment.businessType;
             if (enrichment.revenueModel) enrichedRow['Enriched_Revenue_Model'] = enrichment.revenueModel;
             if (enrichment.companyStage) enrichedRow['Enriched_Company_Stage'] = enrichment.companyStage;
+            if (enrichment.tickerSymbol) enrichedRow['Enriched_Ticker_Symbol'] = enrichment.tickerSymbol;
 
             return enrichedRow;
           }
