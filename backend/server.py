@@ -1,0 +1,364 @@
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, List
+import os
+from dotenv import load_dotenv
+import httpx
+import json
+
+load_dotenv()
+
+app = FastAPI(title="Domain Enrichment API")
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Configuration
+EMERGENT_LLM_KEY = os.getenv("EMERGENT_LLM_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+
+
+class EnrichmentRequest(BaseModel):
+    domain: str
+    provider: str  # 'openai', 'claude', 'perplexica'
+    fields: List[str]  # List of fields to enrich: industry, vertical, employees, hq, founded, revenue, funding, funding_type
+    custom_api_key: Optional[str] = None
+    perplexica_url: Optional[str] = None
+
+
+class EnrichmentResponse(BaseModel):
+    domain: str
+    companyName: Optional[str] = None
+    normalizedDomain: str
+    success: bool
+    error: Optional[str] = None
+    headquarters: Optional[str] = None
+    description: Optional[str] = None
+    industry: Optional[str] = None
+    vertical: Optional[str] = None
+    employeeCount: Optional[str] = None
+    revenue: Optional[str] = None
+    founded: Optional[str] = None
+    funding: Optional[str] = None
+    fundingType: Optional[str] = None
+    provider: str
+
+
+class ConfigResponse(BaseModel):
+    has_emergent_key: bool
+    has_openai_key: bool
+    has_anthropic_key: bool
+    available_providers: List[str]
+
+
+def normalize_domain(domain: str) -> str:
+    """Normalize domain by removing www and converting to lowercase."""
+    return domain.lower().replace("www.", "")
+
+
+def build_prompt(domain: str, fields: List[str]) -> str:
+    """Build enrichment prompt based on selected fields."""
+    field_descriptions = {
+        "industry": "**industry**: Be specific (e.g., 'Enterprise SaaS - Customer Relationship Management' not just 'Software')",
+        "vertical": "**vertical**: The specific market vertical or sector they serve (e.g., 'Healthcare Technology', 'Financial Services', 'E-commerce')",
+        "employees": "**employeeCount**: Research current count, use ranges: '1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5001-10000', '10000+'",
+        "hq": "**headquarters**: Specific address format 'City, State/Province, Country' (e.g., 'San Francisco, California, USA')",
+        "founded": "**founded**: Exact founding year and location if available (e.g., '2010 in Austin, Texas')",
+        "revenue": "**revenue**: Annual revenue with currency if available, use ranges: '<$1M', '$1M-5M', '$5M-10M', '$10M-50M', '$50M-100M', '$100M-500M', '$500M-1B', '$1B+'",
+        "funding": "**funding**: Total funding raised if available (e.g., '$50M', '$100M Series B', 'Bootstrapped')",
+        "funding_type": "**fundingType**: Latest funding round type if available (e.g., 'Series A', 'Series B', 'IPO', 'Acquired', 'Bootstrapped')"
+    }
+    
+    selected_fields = [field_descriptions[field] for field in fields if field in field_descriptions]
+    
+    prompt = f'''Research the company with domain "{domain}" thoroughly. Visit their website, check company databases, and recent news. Provide comprehensive, specific information:
+
+1. **companyName**: Full official company name (legal name if different from brand)
+2. **description**: Write 2-3 detailed sentences covering what products/services they offer and their target market
+'''
+    
+    for i, field_desc in enumerate(selected_fields, start=3):
+        prompt += f"{i}. {field_desc}\n"
+    
+    prompt += "\nReturn ONLY valid JSON with the requested fields. Be thorough and specific. If a field is not available, omit it from the response."
+    
+    return prompt
+
+
+async def enrich_with_openai(domain: str, fields: List[str], api_key: str) -> EnrichmentResponse:
+    """Enrich domain using OpenAI API."""
+    prompt = build_prompt(domain, fields)
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}"
+                },
+                json={
+                    "model": "gpt-4o",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are an expert business intelligence researcher with access to comprehensive company databases and web search. Your task is to find detailed, accurate, and current information about companies. Return only valid JSON."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": 0.1,
+                    "max_tokens": 1000
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f"OpenAI API error: {response.text}")
+            
+            data = response.json()
+            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            
+            if not content:
+                raise HTTPException(status_code=500, detail="No content in OpenAI response")
+            
+            try:
+                parsed = json.loads(content)
+                return EnrichmentResponse(
+                    domain=domain,
+                    companyName=parsed.get("companyName"),
+                    normalizedDomain=normalize_domain(domain),
+                    success=True,
+                    headquarters=parsed.get("headquarters"),
+                    description=parsed.get("description"),
+                    industry=parsed.get("industry"),
+                    vertical=parsed.get("vertical"),
+                    employeeCount=parsed.get("employeeCount"),
+                    revenue=parsed.get("revenue"),
+                    founded=parsed.get("founded"),
+                    funding=parsed.get("funding"),
+                    fundingType=parsed.get("fundingType"),
+                    provider="openai"
+                )
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="Failed to parse OpenAI response")
+                
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="OpenAI API timeout")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+
+async def enrich_with_claude(domain: str, fields: List[str], api_key: str) -> EnrichmentResponse:
+    """Enrich domain using Claude API."""
+    prompt = build_prompt(domain, fields)
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "Content-Type": "application/json",
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01"
+                },
+                json={
+                    "model": "claude-3-5-sonnet-20241022",
+                    "max_tokens": 1024,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f"Claude API error: {response.text}")
+            
+            data = response.json()
+            content = data.get("content", [{}])[0].get("text", "")
+            
+            if not content:
+                raise HTTPException(status_code=500, detail="No content in Claude response")
+            
+            try:
+                # Extract JSON from response
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', content)
+                if not json_match:
+                    raise HTTPException(status_code=500, detail="No JSON found in Claude response")
+                
+                parsed = json.loads(json_match.group(0))
+                return EnrichmentResponse(
+                    domain=domain,
+                    companyName=parsed.get("companyName"),
+                    normalizedDomain=normalize_domain(domain),
+                    success=True,
+                    headquarters=parsed.get("headquarters"),
+                    description=parsed.get("description"),
+                    industry=parsed.get("industry"),
+                    vertical=parsed.get("vertical"),
+                    employeeCount=parsed.get("employeeCount"),
+                    revenue=parsed.get("revenue"),
+                    founded=parsed.get("founded"),
+                    funding=parsed.get("funding"),
+                    fundingType=parsed.get("fundingType"),
+                    provider="claude"
+                )
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="Failed to parse Claude response")
+                
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="Claude API timeout")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+
+async def enrich_with_perplexica(domain: str, fields: List[str], perplexica_url: str) -> EnrichmentResponse:
+    """Enrich domain using Perplexica API."""
+    prompt = build_prompt(domain, fields)
+    
+    api_url = perplexica_url.rstrip('/') + '/api/search'
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                api_url,
+                headers={"Content-Type": "application/json"},
+                json={
+                    "focusMode": "webSearch",
+                    "query": prompt,
+                    "stream": False
+                },
+                timeout=60.0
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=f"Perplexica API error: {response.text}")
+            
+            data = response.json()
+            content = data.get("message", "")
+            
+            if not content:
+                raise HTTPException(status_code=500, detail="No content in Perplexica response")
+            
+            try:
+                # Try to extract JSON from response
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', content)
+                if json_match:
+                    parsed = json.loads(json_match.group(0))
+                    return EnrichmentResponse(
+                        domain=domain,
+                        companyName=parsed.get("companyName"),
+                        normalizedDomain=normalize_domain(domain),
+                        success=True,
+                        headquarters=parsed.get("headquarters"),
+                        description=parsed.get("description"),
+                        industry=parsed.get("industry"),
+                        vertical=parsed.get("vertical"),
+                        employeeCount=parsed.get("employeeCount"),
+                        revenue=parsed.get("revenue"),
+                        founded=parsed.get("founded"),
+                        funding=parsed.get("funding"),
+                        fundingType=parsed.get("fundingType"),
+                        provider="perplexica"
+                    )
+                else:
+                    # If no JSON, return basic info
+                    return EnrichmentResponse(
+                        domain=domain,
+                        companyName=None,
+                        normalizedDomain=normalize_domain(domain),
+                        success=False,
+                        description=content[:200],
+                        error="Could not parse structured response",
+                        provider="perplexica"
+                    )
+            except json.JSONDecodeError:
+                return EnrichmentResponse(
+                    domain=domain,
+                    companyName=None,
+                    normalizedDomain=normalize_domain(domain),
+                    success=False,
+                    error="Failed to parse Perplexica response",
+                    provider="perplexica"
+                )
+                
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="Perplexica API timeout")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/")
+async def root():
+    return {"message": "Domain Enrichment API", "version": "1.0.0"}
+
+
+@app.get("/api/config", response_model=ConfigResponse)
+async def get_config():
+    """Get API configuration and available providers."""
+    has_emergent = bool(EMERGENT_LLM_KEY)
+    has_openai = bool(OPENAI_API_KEY)
+    has_anthropic = bool(ANTHROPIC_API_KEY)
+    
+    available_providers = []
+    if has_emergent or has_openai:
+        available_providers.append("openai")
+    if has_emergent or has_anthropic:
+        available_providers.append("claude")
+    available_providers.append("perplexica")  # Always available if user provides URL
+    
+    return ConfigResponse(
+        has_emergent_key=has_emergent,
+        has_openai_key=has_openai,
+        has_anthropic_key=has_anthropic,
+        available_providers=available_providers
+    )
+
+
+@app.post("/api/enrich", response_model=EnrichmentResponse)
+async def enrich_domain(request: EnrichmentRequest):
+    """Enrich a domain with company information."""
+    
+    # Determine which API key to use
+    if request.provider == "openai":
+        api_key = request.custom_api_key or OPENAI_API_KEY or EMERGENT_LLM_KEY
+        if not api_key:
+            raise HTTPException(status_code=400, detail="No API key available for OpenAI")
+        return await enrich_with_openai(request.domain, request.fields, api_key)
+    
+    elif request.provider == "claude":
+        api_key = request.custom_api_key or ANTHROPIC_API_KEY or EMERGENT_LLM_KEY
+        if not api_key:
+            raise HTTPException(status_code=400, detail="No API key available for Claude")
+        return await enrich_with_claude(request.domain, request.fields, api_key)
+    
+    elif request.provider == "perplexica":
+        if not request.perplexica_url:
+            raise HTTPException(status_code=400, detail="Perplexica URL is required")
+        return await enrich_with_perplexica(request.domain, request.fields, request.perplexica_url)
+    
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown provider: {request.provider}")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8001))
+    host = os.getenv("HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=port)
