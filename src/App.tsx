@@ -513,16 +513,6 @@ function App() {
                        'Enrich & Find Duplicates'}
                     </span>
                   </button>
-
-                  {(matches.length > 0 || enrichmentData.size > 0) && (
-                    <button
-                      onClick={exportResults}
-                      className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Export Results</span>
-                    </button>
-                  )}
                 </div>
 
                 <div className="text-sm text-gray-600">
@@ -538,12 +528,14 @@ function App() {
                 currentStep={currentStep}
               />
 
-              {/* Enriched Data Display */}
+              {/* Enriched Results Table */}
               {enrichmentData.size > 0 && (
-                <EnrichedDataDisplay
+                <EnrichedResultsTable
                   rows={csvData.rows}
                   enrichmentData={enrichmentData}
-                  extendedEnrichment={config.extendedEnrichment}
+                  headers={csvData.headers}
+                  onExportCSV={exportCSV}
+                  onExportExcel={exportExcel}
                 />
               )}
 
@@ -553,7 +545,7 @@ function App() {
                   matches={matches}
                   onActionChange={handleActionChange}
                   onBulkAction={handleBulkAction}
-                  onExport={exportResults}
+                  onExport={exportCSV}
                 />
               )}
             </>
