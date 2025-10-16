@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 import json
 import re
+import httpx
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 load_dotenv()
