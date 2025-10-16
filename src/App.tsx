@@ -189,14 +189,21 @@ function App() {
 
             // Add enriched fields based on what was selected
             if (enrichment.headquarters) enrichedRow['Enriched_Headquarters'] = enrichment.headquarters;
+            if (enrichment.hqCountry) enrichedRow['Enriched_HQ_Country'] = enrichment.hqCountry;
             if (enrichment.description) enrichedRow['Enriched_Description'] = enrichment.description;
+            if (enrichment.shortDescription) enrichedRow['Enriched_Short_Description'] = enrichment.shortDescription;
             if (enrichment.industry) enrichedRow['Enriched_Industry'] = enrichment.industry;
             if (enrichment.vertical) enrichedRow['Enriched_Vertical'] = enrichment.vertical;
             if (enrichment.employeeCount) enrichedRow['Enriched_Employee_Count'] = enrichment.employeeCount;
             if (enrichment.revenue) enrichedRow['Enriched_Revenue'] = enrichment.revenue;
             if (enrichment.founded) enrichedRow['Enriched_Founded'] = enrichment.founded;
+            if (enrichment.foundedCountry) enrichedRow['Enriched_Founded_Country'] = enrichment.foundedCountry;
             if (enrichment.funding) enrichedRow['Enriched_Funding'] = enrichment.funding;
             if (enrichment.fundingType) enrichedRow['Enriched_Funding_Type'] = enrichment.fundingType;
+            if (enrichment.fundingStage) enrichedRow['Enriched_Funding_Stage'] = enrichment.fundingStage;
+            if (enrichment.businessType) enrichedRow['Enriched_Business_Type'] = enrichment.businessType;
+            if (enrichment.revenueModel) enrichedRow['Enriched_Revenue_Model'] = enrichment.revenueModel;
+            if (enrichment.companyStage) enrichedRow['Enriched_Company_Stage'] = enrichment.companyStage;
 
             return enrichedRow;
           }
