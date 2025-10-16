@@ -14,7 +14,8 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
   isProcessing,
   progress,
   stats,
-  currentStep
+  currentStep,
+  operationMode = 'both'
 }) => {
   const formatTime = (seconds: number): string => {
     if (seconds < 60) return `${seconds.toFixed(1)}s`;
@@ -26,6 +27,10 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
   const estimatedTimeRemaining = stats.processingTime > 0 && progress > 0 
     ? (stats.processingTime / progress) * (1 - progress)
     : 0;
+
+  const isEnrichmentMode = operationMode === 'enrich-only';
+  const isDuplicateMode = operationMode === 'duplicates-only';
+  const isBothMode = operationMode === 'both';
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
