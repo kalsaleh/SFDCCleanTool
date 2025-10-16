@@ -366,14 +366,15 @@ function App() {
       if (config.domainEnrichment && enrichment) {
         result['ENRICHED_COMPANY'] = enrichment.companyName || '';
         result['ENRICHED_DOMAIN'] = enrichment.normalizedDomain || '';
-        if (config.extendedEnrichment) {
-          result['ENRICHED_HEADQUARTERS'] = enrichment.headquarters || '';
-          result['ENRICHED_DESCRIPTION'] = enrichment.description || '';
-          result['ENRICHED_INDUSTRY'] = enrichment.industry || '';
-          result['ENRICHED_EMPLOYEE_COUNT'] = enrichment.employeeCount || '';
-          result['ENRICHED_REVENUE'] = enrichment.revenue || '';
-          result['ENRICHED_FOUNDED'] = enrichment.founded || '';
-        }
+        result['ENRICHED_HEADQUARTERS'] = enrichment.headquarters || '';
+        result['ENRICHED_DESCRIPTION'] = enrichment.description || '';
+        result['ENRICHED_INDUSTRY'] = enrichment.industry || '';
+        result['ENRICHED_VERTICAL'] = enrichment.vertical || '';
+        result['ENRICHED_EMPLOYEE_COUNT'] = enrichment.employeeCount || '';
+        result['ENRICHED_REVENUE'] = enrichment.revenue || '';
+        result['ENRICHED_FOUNDED'] = enrichment.founded || '';
+        result['ENRICHED_FUNDING'] = enrichment.funding || '';
+        result['ENRICHED_FUNDING_TYPE'] = enrichment.fundingType || '';
       }
 
       return result;
