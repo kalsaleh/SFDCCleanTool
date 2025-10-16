@@ -406,6 +406,7 @@ function App() {
         result['ENRICHED_BUSINESS_TYPE'] = enrichment.businessType || '';
         result['ENRICHED_REVENUE_MODEL'] = enrichment.revenueModel || '';
         result['ENRICHED_COMPANY_STAGE'] = enrichment.companyStage || '';
+        result['ENRICHED_TICKER_SYMBOL'] = enrichment.tickerSymbol || '';
       }
 
       return result;
