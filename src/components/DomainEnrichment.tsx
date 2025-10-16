@@ -123,11 +123,11 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
               onChange={(e) => onProviderChange(e.target.value as any)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option value="clearbit">Clearbit (Free - Basic Info)</option>
-              <option value="openai">OpenAI (Requires API Key - Extended Info)</option>
-              <option value="claude">Claude (Requires API Key - Extended Info)</option>
-              <option value="perplexica">Perplexity (Requires API Key - Extended Info)</option>
+              <option value="openai">OpenAI GPT-4o (Recommended)</option>
+              <option value="claude">Claude 3.5 Sonnet</option>
+              <option value="perplexica">Perplexica (Self-hosted)</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">All providers use live data and web search</p>
           </div>
 
           {(provider === 'openai' || provider === 'claude' || provider === 'perplexica') && (
