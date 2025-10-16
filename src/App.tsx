@@ -217,6 +217,7 @@ function App() {
         if (config.operationMode === 'both') {
           const enrichedColumns = ['Enriched_Company', 'Enriched_Domain'];
           const possibleEnrichedFields = [
+            'Enriched_Ticker_Symbol',
             'Enriched_Headquarters',
             'Enriched_HQ_Country',
             'Enriched_Description',
