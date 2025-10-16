@@ -148,38 +148,90 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                   <p className="text-xs text-gray-500 mt-1">Enter your self-hosted Perplexica instance URL</p>
                 </div>
               ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
-                    <Key className="h-4 w-4" />
-                    <span>API Key</span>
-                  </label>
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => onApiKeyChange(e.target.value)}
-                    placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : provider === 'claude' ? 'Anthropic' : 'Perplexity'} API key`}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="useEmergentKey"
+                      checked={useEmergentKey}
+                      onChange={(e) => onUseEmergentKeyChange(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="useEmergentKey" className="flex-1 text-sm">
+                      <span className="font-medium text-blue-900">Use Emergent LLM Key</span>
+                      <p className="text-xs text-blue-700">Universal key for OpenAI & Claude (No setup needed)</p>
+                    </label>
+                  </div>
+                  
+                  {!useEmergentKey && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                        <Key className="h-4 w-4" />
+                        <span>Custom API Key</span>
+                      </label>
+                      <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => onApiKeyChange(e.target.value)}
+                        placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key`}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Extended Enrichment</p>
-                    <p className="text-xs text-gray-600">HQ, Description, Industry, Employee Count, Revenue, Founded</p>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Select Fields to Enrich
+                  </label>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={selectAllFields}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-gray-300">|</span>
+                    <button
+                      type="button"
+                      onClick={clearAllFields}
+                      className="text-xs text-gray-600 hover:text-gray-700 font-medium"
+                    >
+                      Clear All
+                    </button>
                   </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={extendedEnrichment}
-                    onChange={(e) => onExtendedToggle(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {availableFields.map(field => (
+                    <div
+                      key={field.id}
+                      className={`flex items-start space-x-2 p-3 border rounded-lg cursor-pointer transition-colors ${
+                        enrichmentFields.includes(field.id)
+                          ? 'bg-green-50 border-green-300'
+                          : 'bg-white border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => toggleField(field.id)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={enrichmentFields.includes(field.id)}
+                        onChange={() => {}}
+                        className="mt-0.5 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">{field.label}</p>
+                        <p className="text-xs text-gray-500">{field.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {enrichmentFields.length} field{enrichmentFields.length !== 1 ? 's' : ''} selected
+                </p>
               </div>
             </>
           )}
