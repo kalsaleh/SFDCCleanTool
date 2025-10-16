@@ -95,59 +95,56 @@ def build_prompt(domain: str, fields: List[str]) -> str:
 
 
 async def enrich_with_openai(domain: str, fields: List[str], api_key: str) -> EnrichmentResponse:
-    """Enrich domain using OpenAI API."""
+    """Enrich domain using OpenAI API via emergentintegrations."""
     prompt = build_prompt(domain, fields)
     
-    async with httpx.AsyncClient() as client:
+    try:
+        # Initialize LlmChat with emergentintegrations
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"enrichment-{domain}",
+            system_message="You are an expert business intelligence researcher with access to comprehensive company databases and web search. Your task is to find detailed, accurate, and current information about companies. Return only valid JSON."
+        ).with_model("openai", "gpt-4o")
+        
+        # Create user message
+        user_message = UserMessage(text=prompt)
+        
+        # Send message and get response
+        content = await chat.send_message(user_message)
+        
+        if not content:
+            raise HTTPException(status_code=500, detail="No content in OpenAI response")
+        
         try:
-            response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}"
-                },
-                json={
-                    "model": "gpt-4o",
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": "You are an expert business intelligence researcher with access to comprehensive company databases and web search. Your task is to find detailed, accurate, and current information about companies. Return only valid JSON."
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
-                    "temperature": 0.1,
-                    "max_tokens": 1000
-                },
-                timeout=30.0
-            )
-            
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail=f"OpenAI API error: {response.text}")
-            
-            data = response.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            
-            if not content:
-                raise HTTPException(status_code=500, detail="No content in OpenAI response")
-            
-            try:
+            # Extract JSON from response
+            json_match = re.search(r'\{[\s\S]*\}', content)
+            if not json_match:
+                # Try to parse the whole content as JSON
                 parsed = json.loads(content)
-                return EnrichmentResponse(
-                    domain=domain,
-                    companyName=parsed.get("companyName"),
-                    normalizedDomain=normalize_domain(domain),
-                    success=True,
-                    headquarters=parsed.get("headquarters"),
-                    description=parsed.get("description"),
-                    industry=parsed.get("industry"),
-                    vertical=parsed.get("vertical"),
-                    employeeCount=parsed.get("employeeCount"),
-                    revenue=parsed.get("revenue"),
-                    founded=parsed.get("founded"),
-                    funding=parsed.get("funding"),
+            else:
+                parsed = json.loads(json_match.group(0))
+            
+            return EnrichmentResponse(
+                domain=domain,
+                companyName=parsed.get("companyName"),
+                normalizedDomain=normalize_domain(domain),
+                success=True,
+                headquarters=parsed.get("headquarters"),
+                description=parsed.get("description"),
+                industry=parsed.get("industry"),
+                vertical=parsed.get("vertical"),
+                employeeCount=parsed.get("employeeCount"),
+                revenue=parsed.get("revenue"),
+                founded=parsed.get("founded"),
+                funding=parsed.get("funding"),
+                fundingType=parsed.get("fundingType"),
+                provider="openai"
+            )
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=500, detail=f"Failed to parse OpenAI response: {str(e)}")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OpenAI enrichment error: {str(e)}")
                     fundingType=parsed.get("fundingType"),
                     provider="openai"
                 )
