@@ -17,6 +17,7 @@ import { CSVRow, MatchResult, MatchingConfig as Config, ProcessingStats } from '
 
 function App() {
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: CSVRow[] } | null>(null);
+  const [availableColumns, setAvailableColumns] = useState<string[]>([]);
   const [filename, setFilename] = useState<string>('');
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -61,6 +62,7 @@ function App() {
       console.log('Parsed CSV - First row:', parsed.rows[0]);
 
       setCsvData(parsed);
+      setAvailableColumns(parsed.headers);
       setFilename(uploadedFilename);
       setMatches([]);
       setProgress(0);
@@ -188,6 +190,23 @@ function App() {
         });
 
         console.log('Enriched rows:', enrichedCount);
+
+        // Update available columns to include enriched fields for duplicate matching
+        if (config.operationMode === 'both') {
+          const enrichedColumns = ['Enriched_Company', 'Enriched_Domain'];
+          if (config.extendedEnrichment) {
+            enrichedColumns.push(
+              'Enriched_Headquarters',
+              'Enriched_Industry',
+              'Enriched_Description',
+              'Enriched_Employee_Count',
+              'Enriched_Revenue',
+              'Enriched_Founded'
+            );
+          }
+          const newColumns = [...csvData.headers, ...enrichedColumns];
+          setAvailableColumns(newColumns);
+        }
       }
 
       let finalMatches: any[] = [];
@@ -411,7 +430,7 @@ function App() {
               {(config.operationMode === 'duplicates-only' || config.operationMode === 'both') && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <ColumnSelector
-                    columns={csvData.headers}
+                    columns={availableColumns}
                     selectedColumns={config.selectedColumns}
                     onColumnToggle={handleColumnToggle}
                     onSelectAll={handleSelectAllColumns}

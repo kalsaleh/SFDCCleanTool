@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Database, Search } from 'lucide-react';
+import { Check, Database, Search, Sparkles } from 'lucide-react';
 
 interface ColumnSelectorProps {
   columns: string[];
@@ -18,8 +18,9 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 }) => {
   console.log('ColumnSelector - columns:', columns);
   console.log('ColumnSelector - selectedColumns:', selectedColumns);
-  const getColumnType = (column: string): 'name' | 'address' | 'contact' | 'other' => {
+  const getColumnType = (column: string): 'name' | 'address' | 'contact' | 'enriched' | 'other' => {
     const col = column.toLowerCase();
+    if (col.startsWith('enriched_')) return 'enriched';
     if (col.includes('name') || col.includes('company') || col.includes('account')) return 'name';
     if (col.includes('address') || col.includes('street') || col.includes('city') || col.includes('state') || col.includes('country')) return 'address';
     if (col.includes('email') || col.includes('phone') || col.includes('contact')) return 'contact';
@@ -30,6 +31,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
     switch (type) {
       case 'name': return <Database className="h-4 w-4" />;
       case 'address': return <Search className="h-4 w-4" />;
+      case 'enriched': return <Sparkles className="h-4 w-4" />;
       default: return <Check className="h-4 w-4" />;
     }
   };
@@ -38,7 +40,8 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
     switch (type) {
       case 'name': return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'address': return 'text-green-600 bg-green-50 border-green-200';
-      case 'contact': return 'text-purple-600 bg-purple-50 border-purple-200';
+      case 'contact': return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'enriched': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
