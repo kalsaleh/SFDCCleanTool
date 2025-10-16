@@ -349,7 +349,8 @@ function App() {
         'ENRICHED_FUNDING_STAGE',
         'ENRICHED_BUSINESS_TYPE',
         'ENRICHED_REVENUE_MODEL',
-        'ENRICHED_COMPANY_STAGE'
+        'ENRICHED_COMPANY_STAGE',
+        'ENRICHED_TICKER_SYMBOL'
       );
     }
     const enhancedHeaders = [...csvData.headers, ...additionalColumns];
