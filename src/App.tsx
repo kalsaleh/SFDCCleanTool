@@ -526,6 +526,7 @@ function App() {
                 progress={progress}
                 stats={stats}
                 currentStep={currentStep}
+                operationMode={config.operationMode}
               />
 
               {/* Enriched Results Table */}
