@@ -592,6 +592,14 @@ function App() {
                        'Enrich & Find Duplicates'}
                     </span>
                   </button>
+
+                  <button
+                    onClick={handleClearAll}
+                    disabled={isProcessing}
+                    className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span>Clear All</span>
+                  </button>
                 </div>
 
                 <div className="text-sm text-gray-600">
