@@ -272,14 +272,21 @@ async def enrich_with_perplexica(domain: str, fields: List[str], perplexica_url:
                         normalizedDomain=normalize_domain(domain),
                         success=True,
                         headquarters=parsed.get("headquarters"),
+                        hqCountry=parsed.get("hqCountry"),
                         description=parsed.get("description"),
+                        shortDescription=parsed.get("shortDescription"),
                         industry=parsed.get("industry"),
                         vertical=parsed.get("vertical"),
                         employeeCount=parsed.get("employeeCount"),
                         revenue=parsed.get("revenue"),
                         founded=parsed.get("founded"),
+                        foundedCountry=parsed.get("foundedCountry"),
                         funding=parsed.get("funding"),
                         fundingType=parsed.get("fundingType"),
+                        fundingStage=parsed.get("fundingStage"),
+                        businessType=parsed.get("businessType"),
+                        revenueModel=parsed.get("revenueModel"),
+                        companyStage=parsed.get("companyStage"),
                         provider="perplexica"
                     )
                 else:
