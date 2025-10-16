@@ -459,6 +459,46 @@ function App() {
     }
   }, [csvData, filename, buildEnhancedRows]);
 
+  const handleClearAll = useCallback(async () => {
+    if (window.confirm('Are you sure you want to clear all data, results, and cache? This cannot be undone.')) {
+      try {
+        // Clear backend cache
+        await BackendApi.clearCache();
+        
+        // Clear frontend cache
+        EnrichmentService.clearCache();
+        
+        // Reset all state
+        setCsvData(null);
+        setFilename('');
+        setMatches([]);
+        setEnrichmentData(new Map());
+        setIsProcessing(false);
+        setProgress(0);
+        setCurrentStep('Ready to process');
+        setStats({
+          totalRows: 0,
+          processedRows: 0,
+          duplicatesFound: 0,
+          hierarchiesIdentified: 0,
+          processingTime: 0
+        });
+        setAvailableColumns([]);
+        setConfig(prev => ({
+          ...prev,
+          selectedColumns: [],
+          domainColumn: ''
+        }));
+        
+        console.log('All data and cache cleared successfully');
+        alert('All data, results, and cache have been cleared!');
+      } catch (error) {
+        console.error('Error clearing cache:', error);
+        alert('Error clearing cache: ' + (error instanceof Error ? error.message : String(error)));
+      }
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
