@@ -40,10 +40,12 @@ function App() {
     hierarchyDetection: true,
     domainEnrichment: false,
     domainColumn: '',
-    enrichmentProvider: 'clearbit',
+    enrichmentProvider: 'openai',
     enrichmentApiKey: '',
-    perplexicaUrl: 'http://localhost:3000',
+    perplexicaUrl: '',
     extendedEnrichment: false,
+    enrichmentFields: ['industry', 'vertical', 'employees', 'hq', 'founded', 'revenue'],
+    useEmergentKey: true,
     operationMode: 'both'
   });
   const [enrichmentData, setEnrichmentData] = useState<Map<number, any>>(new Map());
