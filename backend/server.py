@@ -83,11 +83,19 @@ def build_prompt(domain: str, fields: List[str]) -> str:
         "industry": "**industry**: Be specific (e.g., 'Enterprise SaaS - Customer Relationship Management' not just 'Software')",
         "vertical": "**vertical**: The specific market vertical or sector they serve (e.g., 'Healthcare Technology', 'Financial Services', 'E-commerce')",
         "employees": "**employeeCount**: Research current count, use ranges: '1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5001-10000', '10000+'",
-        "hq": "**headquarters**: Specific address format 'City, State/Province, Country' (e.g., 'San Francisco, California, USA')",
-        "founded": "**founded**: Exact founding year and location if available (e.g., '2010 in Austin, Texas')",
+        "hq": "**headquarters**: Full address format 'City, State/Province, Country' (e.g., 'San Francisco, California, USA')",
+        "hq_country": "**hqCountry**: Country where headquarters is located (e.g., 'USA', 'United Kingdom', 'Germany')",
+        "description": "**description**: Write 2-3 detailed sentences covering what products/services they offer and their target market",
+        "short_description": "**shortDescription**: Write 1 concise sentence (max 15 words) describing what the company does",
+        "founded": "**founded**: Exact founding year if available (e.g., '2010')",
+        "founded_country": "**foundedCountry**: Country where the company was founded (e.g., 'USA', 'United Kingdom', 'China')",
         "revenue": "**revenue**: Annual revenue with currency if available, use ranges: '<$1M', '$1M-5M', '$5M-10M', '$10M-50M', '$50M-100M', '$100M-500M', '$500M-1B', '$1B+'",
-        "funding": "**funding**: Total funding raised if available (e.g., '$50M', '$100M Series B', 'Bootstrapped')",
-        "funding_type": "**fundingType**: Latest funding round type if available (e.g., 'Series A', 'Series B', 'IPO', 'Acquired', 'Bootstrapped')"
+        "funding": "**funding**: Total funding raised if available (e.g., '$50M', '$100M', 'Bootstrapped')",
+        "funding_type": "**fundingType**: Latest funding round type if available (e.g., 'Series A', 'Series B', 'IPO', 'Acquired', 'Bootstrapped')",
+        "funding_stage": "**fundingStage**: Current funding stage, choose from: 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Series D', 'Series E', 'Series F', 'Series G', 'Growth', 'Established', 'Unknown', 'N/A', 'None', 'Not Applicable'",
+        "business_type": "**businessType**: Classify as one of: 'Digital Native' (born in cloud, selling primarily digitally), 'Digitally Transformed' (traditional business adapted to digital), or 'Traditional' (primarily offline/physical operations)",
+        "revenue_model": "**revenueModel**: Primary revenue model (e.g., 'Subscription', 'B2B Sales', 'B2C Sales', 'Commission', 'Transaction Fees', 'Advertising', 'Freemium', 'Marketplace', 'Licensing', 'Hybrid')",
+        "company_stage": "**companyStage**: Company maturity stage, choose from: 'Startup' (early stage, scaling), 'Growth' (rapidly expanding), or 'Established' (mature, stable operations)"
     }
     
     selected_fields = [field_descriptions[field] for field in fields if field in field_descriptions]
@@ -95,7 +103,6 @@ def build_prompt(domain: str, fields: List[str]) -> str:
     prompt = f'''Research the company with domain "{domain}" thoroughly. Visit their website, check company databases, and recent news. Provide comprehensive, specific information:
 
 1. **companyName**: Full official company name (legal name if different from brand)
-2. **description**: Write 2-3 detailed sentences covering what products/services they offer and their target market
 '''
     
     for i, field_desc in enumerate(selected_fields, start=3):
