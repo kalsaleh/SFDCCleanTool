@@ -1,5 +1,5 @@
-// Use the backend on port 8001
-const API_BASE_URL = window.location.protocol + '//' + window.location.hostname + ':8001';
+// Use relative path - Vite will proxy to backend
+const API_BASE_URL = '';
 
 export interface EnrichmentRequest {
   domain: string;
