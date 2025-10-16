@@ -321,7 +321,6 @@ function App() {
           'ENRICHED_FUNDING',
           'ENRICHED_FUNDING_TYPE'
         );
-        }
       }
       const enhancedHeaders = [...csvData.headers, ...additionalColumns];
 
