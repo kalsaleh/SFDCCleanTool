@@ -6,6 +6,7 @@ import { ColumnSelector } from './components/ColumnSelector';
 import { MatchingConfig } from './components/MatchingConfig';
 import { DomainEnrichment } from './components/DomainEnrichment';
 import { EnrichedDataDisplay } from './components/EnrichedDataDisplay';
+import { EnrichedResultsTable } from './components/EnrichedResultsTable';
 import { ProcessingProgress } from './components/ProcessingProgress';
 import { MatchResults } from './components/MatchResults';
 import { CSVParser } from './utils/csvParser';
@@ -14,6 +15,7 @@ import { AIMatcher } from './utils/aiMatcher';
 import { EnrichmentService } from './services/enrichmentService';
 import { ApiClient } from './utils/apiClient';
 import { CSVRow, MatchResult, MatchingConfig as Config, ProcessingStats } from './types';
+import * as XLSX from 'xlsx';
 
 function App() {
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: CSVRow[] } | null>(null);
