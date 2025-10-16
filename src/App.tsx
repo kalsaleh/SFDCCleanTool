@@ -462,6 +462,10 @@ function App() {
                   onPerplexicaUrlChange={(url) => setConfig(prev => ({ ...prev, perplexicaUrl: url }))}
                   extendedEnrichment={config.extendedEnrichment}
                   onExtendedToggle={(extended) => setConfig(prev => ({ ...prev, extendedEnrichment: extended }))}
+                  enrichmentFields={config.enrichmentFields}
+                  onFieldsChange={(fields) => setConfig(prev => ({ ...prev, enrichmentFields: fields }))}
+                  useEmergentKey={config.useEmergentKey}
+                  onUseEmergentKeyChange={(use) => setConfig(prev => ({ ...prev, useEmergentKey: use }))}
                 />
               )}
 
