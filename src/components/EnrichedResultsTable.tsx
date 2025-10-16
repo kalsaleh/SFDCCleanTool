@@ -36,6 +36,7 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
   // Get all enriched column names
   const enrichedColumns = [
     { key: 'companyName', label: 'Company' },
+    { key: 'tickerSymbol', label: 'Ticker' },
     { key: 'normalizedDomain', label: 'Domain' },
     { key: 'industry', label: 'Industry' },
     { key: 'vertical', label: 'Vertical' },
@@ -50,6 +51,9 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
     { key: 'fundingType', label: 'Funding Type' },
     { key: 'fundingStage', label: 'Funding Stage' },
     { key: 'businessType', label: 'Business Type' },
+    { key: 'revenueModel', label: 'Revenue Model' },
+    { key: 'companyStage', label: 'Stage' },
+  ];
     { key: 'revenueModel', label: 'Revenue Model' },
     { key: 'companyStage', label: 'Stage' },
   ];
