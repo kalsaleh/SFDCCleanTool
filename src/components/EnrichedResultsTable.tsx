@@ -130,33 +130,6 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
               </tbody>
             </table>
           </div>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.vertical || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.headquarters || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.employeeCount || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.revenue || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.founded || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.funding || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.fundingType || '-'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
