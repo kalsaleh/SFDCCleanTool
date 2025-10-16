@@ -392,6 +392,14 @@ async def enrich_domain(request: EnrichmentRequest):
         raise HTTPException(status_code=400, detail=f"Unknown provider: {request.provider}")
 
 
+@app.post("/api/clear-cache")
+async def clear_cache():
+    """Clear the enrichment cache."""
+    from services.enrichmentService import EnrichmentService
+    EnrichmentService.clearCache()
+    return {"message": "Cache cleared successfully"}
+
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8001))
