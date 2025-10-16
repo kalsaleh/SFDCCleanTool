@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Database, Zap, Brain, Download } from 'lucide-react';
 import { FileUpload } from './components/FileUpload';
 import { OperationMode } from './components/OperationMode';
@@ -46,6 +46,12 @@ function App() {
     operationMode: 'both'
   });
   const [enrichmentData, setEnrichmentData] = useState<Map<number, any>>(new Map());
+
+  useEffect(() => {
+    if (config.operationMode === 'enrich-only' || config.operationMode === 'both') {
+      setConfig(prev => ({ ...prev, domainEnrichment: true }));
+    }
+  }, [config.operationMode]);
 
   const handleFileUpload = useCallback((content: string, uploadedFilename: string) => {
     try {

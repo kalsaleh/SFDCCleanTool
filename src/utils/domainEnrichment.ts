@@ -135,19 +135,19 @@ export class DomainEnrichment {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: 'You are a business intelligence assistant. Provide accurate company information in JSON format only. If you cannot find information, use null for that field.'
+            content: 'You are an expert business intelligence researcher with access to comprehensive company databases and web search. Your task is to find detailed, accurate, and current information about companies. Thoroughly research each company using multiple sources. Provide specific details, not generic descriptions. Return only valid JSON.'
           },
           {
             role: 'user',
-            content: `Provide detailed information about the company at domain: ${domain}. Return ONLY valid JSON with these fields: companyName, headquarters (city, country), description (one sentence), industry, employeeCount (approximate range like "100-500"), revenue (approximate range with currency), founded (year). Example: {"companyName":"Example Inc","headquarters":"San Francisco, USA","description":"A software company","industry":"Technology","employeeCount":"100-500","revenue":"$10M-50M","founded":"2015"}`
+            content: `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news. Provide comprehensive, specific information:\n\n1. **companyName**: Full official company name (legal name if different from brand)\n2. **headquarters**: Specific address format "City, State/Province, Country" (e.g., "San Francisco, California, USA" not just "San Francisco, USA")\n3. **description**: Write 3-4 detailed sentences covering:\n   - What products/services they offer\n   - Their target market and customers\n   - What makes them unique or notable\n   - Their business model or key value proposition\n4. **industry**: Be specific (e.g., "Enterprise SaaS - Customer Relationship Management" not just "Software")\n5. **employeeCount**: Research current count, use ranges: "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"\n6. **revenue**: Annual revenue with currency, ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"\n7. **founded**: Exact year (YYYY)\n\nReturn ONLY valid JSON. Be thorough and specific - this is for business intelligence purposes.`
           }
         ],
-        temperature: 0.3,
-        max_tokens: 300
+        temperature: 0.1,
+        max_tokens: 800
       })
     });
 
@@ -201,7 +201,21 @@ export class DomainEnrichment {
       },
       body: JSON.stringify({
         focusMode: 'webSearch',
-        query: `Provide detailed information about the company at domain: ${domain}. Include: company name, headquarters location (city, country), brief description, industry, employee count range, revenue range, and year founded. Format as JSON with fields: companyName, headquarters, description, industry, employeeCount, revenue, founded.`,
+        query: `Conduct comprehensive research on the company with domain "${domain}". Search their official website, company databases (LinkedIn, Crunchbase), and recent news articles. Provide highly detailed and specific information:
+
+1. **companyName**: Full official legal company name
+2. **headquarters**: Complete address format "City, State/Province, Country" (e.g., "Austin, Texas, USA")
+3. **description**: Write 3-4 detailed sentences that explain:
+   - What specific products or services they provide
+   - Who their target customers are (B2B, B2C, industry focus)
+   - What differentiates them in the market
+   - Their business model or key offerings
+4. **industry**: Be very specific with sector and subsector (e.g., "FinTech - Payment Processing" or "Healthcare - Electronic Medical Records")
+5. **employeeCount**: Find the current employee count and use these ranges: "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"
+6. **revenue**: Annual revenue with proper ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"
+7. **founded**: Exact founding year (YYYY format)
+
+Format your response as valid JSON only. Be thorough and accurate - this is for business intelligence and data enrichment purposes. Include all available information.`,
         stream: false
       })
     });
