@@ -96,10 +96,10 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
                   </th>
                   {enrichedColumns.map((col) => (
                     <th
-                      key={col}
+                      key={col.key}
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      {col.replace('Enriched_', '').replace(/_/g, ' ')}
+                      {col.label}
                     </th>
                   ))}
                 </tr>
@@ -119,15 +119,17 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
                           ))}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.companyName || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.normalizedDomain || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {enrichment?.industry || '-'}
-                      </td>
+                      {enrichedColumns.map((col) => (
+                        <td key={col.key} className="px-4 py-3 text-sm text-gray-900">
+                          {enrichment?.[col.key as keyof typeof enrichment] || '-'}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {enrichment?.vertical || '-'}
                       </td>
