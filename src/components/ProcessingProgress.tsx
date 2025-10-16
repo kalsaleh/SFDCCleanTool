@@ -87,19 +87,39 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
           <div className="text-sm text-gray-600">Processed</div>
         </div>
 
-        <div className="text-center p-3 bg-orange-50 rounded-lg">
-          <div className="text-2xl font-bold text-orange-600">
-            {stats.duplicatesFound.toLocaleString()}
-          </div>
-          <div className="text-sm text-gray-600">Duplicates Found</div>
-        </div>
+        {isEnrichmentMode ? (
+          <>
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">
+                {stats.enrichedRows?.toLocaleString() || '0'}
+              </div>
+              <div className="text-sm text-gray-600">Enriched</div>
+            </div>
 
-        <div className="text-center p-3 bg-green-50 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">
-            {stats.hierarchiesIdentified.toLocaleString()}
-          </div>
-          <div className="text-sm text-gray-600">Hierarchies</div>
-        </div>
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.enrichedRows ? ((stats.enrichedRows / stats.totalRows) * 100).toFixed(1) : '0'}%
+              </div>
+              <div className="text-sm text-gray-600">Success Rate</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.duplicatesFound.toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">Duplicates Found</div>
+            </div>
+
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">
+                {stats.hierarchiesIdentified.toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">Hierarchies</div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Processing Time */}
