@@ -31,6 +31,7 @@ export interface EnrichmentResponse {
   businessType?: string;
   revenueModel?: string;
   companyStage?: string;
+  tickerSymbol?: string;
   provider: string;
 }
 
