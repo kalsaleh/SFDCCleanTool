@@ -7,16 +7,10 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     strictPort: false,
-    host: '0.0.0.0',
+    host: true,
     hmr: {
       clientPort: 443,
-      protocol: 'wss',
     },
-    allowedHosts: [
-      'ai-model-hub-8.preview.emergentagent.com',
-      '.preview.emergentagent.com',
-      'localhost',
-    ],
   },
   envPrefix: ['VITE_', 'TAURI_'],
   build: {
