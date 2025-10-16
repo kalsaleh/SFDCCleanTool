@@ -163,8 +163,15 @@ function App() {
           config.useEmergentKey,
           config.enrichmentApiKey,
           config.perplexicaUrl,
-          (progress) => {
-            setProgress(progress * 0.2);
+          (progress, currentEnrichedCount) => {
+            const progressValue = shouldFindDuplicates ? progress * 0.2 : progress;
+            setProgress(progressValue);
+            setStats(prev => ({
+              ...prev,
+              processedRows: Math.floor(progress * csvData.rows.length),
+              enrichedRows: currentEnrichedCount || 0,
+              processingTime: (Date.now() - startTime) / 1000
+            }));
           }
         );
 
