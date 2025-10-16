@@ -11,7 +11,7 @@ import { MatchResults } from './components/MatchResults';
 import { CSVParser } from './utils/csvParser';
 import { FuzzyMatcher } from './utils/fuzzyMatcher';
 import { AIMatcher } from './utils/aiMatcher';
-import { DomainEnrichment as DomainEnrichmentService } from './utils/domainEnrichment';
+import { EnrichmentService } from './services/enrichmentService';
 import { ApiClient } from './utils/apiClient';
 import { CSVRow, MatchResult, MatchingConfig as Config, ProcessingStats } from './types';
 
