@@ -7,6 +7,7 @@ interface ProcessingProgressProps {
   progress: number;
   stats: ProcessingStats;
   currentStep: string;
+  operationMode?: 'enrich-only' | 'duplicates-only' | 'both';
 }
 
 export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
