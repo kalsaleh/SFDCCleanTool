@@ -90,9 +90,18 @@ def build_prompt(domain: str, fields: List[str]) -> str:
         "funding": "**funding**: Total funding raised if available (e.g., '$50M', '$100M', 'Bootstrapped')",
         "funding_type": "**fundingType**: Latest funding round type if available (e.g., 'Series A', 'Series B', 'IPO', 'Acquired', 'Bootstrapped')",
         "funding_stage": "**fundingStage**: Current funding stage, choose from: 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Series D', 'Series E', 'Series F', 'Series G', 'Growth', 'Established', 'Unknown', 'N/A', 'None', 'Not Applicable'",
-        "business_type": "**businessType**: Classify as one of: 'Digital Native' (born in cloud, selling primarily digitally), 'Digitally Transformed' (traditional business adapted to digital), or 'Traditional' (primarily offline/physical operations)",
-        "revenue_model": "**revenueModel**: Primary revenue model (e.g., 'Subscription', 'B2B Sales', 'B2C Sales', 'Commission', 'Transaction Fees', 'Advertising', 'Freemium', 'Marketplace', 'Licensing', 'Hybrid')",
-        "company_stage": "**companyStage**: Company maturity stage, choose from: 'Startup' (early stage, scaling), 'Growth' (rapidly expanding), or 'Established' (mature, stable operations)"
+        "business_type": """**businessType**: IMPORTANT - Use strict criteria to classify:
+        - 'Digital Native' (DNB): Must meet ALL these criteria:
+          * Founded in 2015 or later (within last 10 years)
+          * Received VC/PE funding OR is privately funded tech startup
+          * Sells products/services primarily through digital channels
+          * Born in the cloud (no legacy physical infrastructure)
+        - 'Mature DNB': Public company (has ticker symbol) that was originally a Digital Native
+        - 'Digitally Transformed': Traditional business that adapted to digital (founded before 2015 but now has strong digital presence)
+        - 'Traditional': Primarily offline/physical operations, minimal digital transformation""",
+        "revenue_model": """**revenueModel**: Visit the company website and analyze their business model. Primary revenue model (e.g., 'Subscription', 'B2B Sales', 'B2C Sales', 'Commission', 'Transaction Fees', 'Advertising', 'Freemium', 'Marketplace', 'Licensing', 'Hybrid'). Research their pricing page and about section.""",
+        "company_stage": "**companyStage**: Company maturity stage, choose from: 'Startup' (early stage, scaling), 'Growth' (rapidly expanding), or 'Established' (mature, stable operations)",
+        "ticker_symbol": "**tickerSymbol**: Stock ticker symbol if the company is publicly traded (e.g., 'AAPL', 'GOOGL', 'MSFT'). If not public, use 'N/A' or omit"
     }
     
     selected_fields = [field_descriptions[field] for field in fields if field in field_descriptions]
