@@ -16,14 +16,21 @@ export interface EnrichmentResponse {
   success: boolean;
   error?: string;
   headquarters?: string;
+  hqCountry?: string;
   description?: string;
+  shortDescription?: string;
   industry?: string;
   vertical?: string;
   employeeCount?: string;
   revenue?: string;
   founded?: string;
+  foundedCountry?: string;
   funding?: string;
   fundingType?: string;
+  fundingStage?: string;
+  businessType?: string;
+  revenueModel?: string;
+  companyStage?: string;
   provider: string;
 }
 
