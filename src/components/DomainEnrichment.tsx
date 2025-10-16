@@ -34,8 +34,38 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
   perplexicaUrl,
   onPerplexicaUrlChange,
   extendedEnrichment,
-  onExtendedToggle
+  onExtendedToggle,
+  enrichmentFields,
+  onFieldsChange,
+  useEmergentKey,
+  onUseEmergentKeyChange
 }) => {
+  const availableFields = [
+    { id: 'industry', label: 'Industry', description: 'Company industry sector' },
+    { id: 'vertical', label: 'Vertical', description: 'Specific market vertical' },
+    { id: 'employees', label: 'Number of Employees', description: 'Employee count range' },
+    { id: 'hq', label: 'Headquarters', description: 'HQ location' },
+    { id: 'founded', label: 'Founded', description: 'Year and location founded' },
+    { id: 'revenue', label: 'Revenue', description: 'Annual revenue (if available)' },
+    { id: 'funding', label: 'Funding', description: 'Total funding raised (if available)' },
+    { id: 'funding_type', label: 'Latest Funding Type', description: 'Latest funding round (if available)' }
+  ];
+
+  const toggleField = (fieldId: string) => {
+    if (enrichmentFields.includes(fieldId)) {
+      onFieldsChange(enrichmentFields.filter(f => f !== fieldId));
+    } else {
+      onFieldsChange([...enrichmentFields, fieldId]);
+    }
+  };
+
+  const selectAllFields = () => {
+    onFieldsChange(availableFields.map(f => f.id));
+  };
+
+  const clearAllFields = () => {
+    onFieldsChange([]);
+  };
   const emailDomainColumns = columns.filter(col => {
     const lower = col.toLowerCase();
     return lower.includes('email') || lower.includes('domain') || lower.includes('website') || lower.includes('url');
