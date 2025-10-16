@@ -106,7 +106,21 @@ def build_prompt(domain: str, fields: List[str]) -> str:
     
     selected_fields = [field_descriptions[field] for field in fields if field in field_descriptions]
     
-    prompt = f'''Research the company with domain "{domain}" thoroughly. Visit their website, check company databases, and recent news. Provide comprehensive, specific information:
+    prompt = f'''You are a business intelligence researcher with web browsing capabilities. Research the company with domain "{domain}" using the following methodology:
+
+STEP 1 - WEB RESEARCH:
+- Visit the company's website at {domain}
+- Navigate to their About page, Pricing page, and Investor Relations (if available)
+- Read their mission statement, product descriptions, and business model
+- Check their blog or news section for recent updates
+
+STEP 2 - EXTERNAL DATABASES:
+- Search company databases (Crunchbase, LinkedIn, etc.)
+- Check SEC filings if publicly traded
+- Review funding announcements and press releases
+
+STEP 3 - ANALYSIS:
+Provide comprehensive, specific information based on your research:
 
 1. **companyName**: Full official company name (legal name if different from brand)
 '''
