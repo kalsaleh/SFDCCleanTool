@@ -105,10 +105,10 @@ def build_prompt(domain: str, fields: List[str]) -> str:
 1. **companyName**: Full official company name (legal name if different from brand)
 '''
     
-    for i, field_desc in enumerate(selected_fields, start=3):
+    for i, field_desc in enumerate(selected_fields, start=2):
         prompt += f"{i}. {field_desc}\n"
     
-    prompt += "\nReturn ONLY valid JSON with the requested fields. Be thorough and specific. If a field is not available, omit it from the response."
+    prompt += "\nReturn ONLY valid JSON with the requested fields. Be thorough and specific. If a field is not available, omit it from the response or use null."
     
     return prompt
 
