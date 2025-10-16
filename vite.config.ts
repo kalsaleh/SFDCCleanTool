@@ -17,6 +17,13 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       clientPort: 443,
     },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+      },
+    },
   },
   envPrefix: ['VITE_', 'TAURI_'],
   build: {
