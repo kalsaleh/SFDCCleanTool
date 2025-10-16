@@ -7,7 +7,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 3000,
     strictPort: false,
-    host: true,
+    host: '0.0.0.0',
+    allowedHosts: [
+      'ai-model-hub-8.preview.emergentagent.com',
+      '.preview.emergentagent.com',
+      'localhost',
+      '127.0.0.1',
+    ],
     hmr: {
       clientPort: 443,
     },
