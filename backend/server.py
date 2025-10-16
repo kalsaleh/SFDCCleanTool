@@ -145,24 +145,58 @@ async def enrich_with_openai(domain: str, fields: List[str], api_key: str) -> En
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"OpenAI enrichment error: {str(e)}")
-                    fundingType=parsed.get("fundingType"),
-                    provider="openai"
-                )
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=500, detail="Failed to parse OpenAI response")
-                
-        except httpx.TimeoutException:
-            raise HTTPException(status_code=504, detail="OpenAI API timeout")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
 
 
 async def enrich_with_claude(domain: str, fields: List[str], api_key: str) -> EnrichmentResponse:
-    """Enrich domain using Claude API."""
+    """Enrich domain using Claude API via emergentintegrations."""
     prompt = build_prompt(domain, fields)
     
-    async with httpx.AsyncClient() as client:
+    try:
+        # Initialize LlmChat with emergentintegrations
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"enrichment-{domain}",
+            system_message="You are an expert business intelligence researcher. Find detailed, accurate information about companies and return valid JSON only."
+        ).with_model("anthropic", "claude-3-7-sonnet-20250219")
+        
+        # Create user message
+        user_message = UserMessage(text=prompt)
+        
+        # Send message and get response
+        content = await chat.send_message(user_message)
+        
+        if not content:
+            raise HTTPException(status_code=500, detail="No content in Claude response")
+        
         try:
+            # Extract JSON from response
+            json_match = re.search(r'\{[\s\S]*\}', content)
+            if not json_match:
+                parsed = json.loads(content)
+            else:
+                parsed = json.loads(json_match.group(0))
+            
+            return EnrichmentResponse(
+                domain=domain,
+                companyName=parsed.get("companyName"),
+                normalizedDomain=normalize_domain(domain),
+                success=True,
+                headquarters=parsed.get("headquarters"),
+                description=parsed.get("description"),
+                industry=parsed.get("industry"),
+                vertical=parsed.get("vertical"),
+                employeeCount=parsed.get("employeeCount"),
+                revenue=parsed.get("revenue"),
+                founded=parsed.get("founded"),
+                funding=parsed.get("funding"),
+                fundingType=parsed.get("fundingType"),
+                provider="claude"
+            )
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=500, detail=f"Failed to parse Claude response: {str(e)}")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Claude enrichment error: {str(e)}")
             response = await client.post(
                 "https://api.anthropic.com/v1/messages",
                 headers={
