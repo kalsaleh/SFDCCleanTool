@@ -22,10 +22,12 @@ export interface MatchingConfig {
   hierarchyDetection: boolean;
   domainEnrichment: boolean;
   domainColumn: string;
-  enrichmentProvider: 'clearbit' | 'openai' | 'perplexica' | 'claude';
+  enrichmentProvider: 'openai' | 'perplexica' | 'claude';
   enrichmentApiKey?: string;
   perplexicaUrl?: string;
   extendedEnrichment: boolean;
+  enrichmentFields: string[];
+  useEmergentKey: boolean;
   operationMode: 'enrich-only' | 'duplicates-only' | 'both';
 }
 
