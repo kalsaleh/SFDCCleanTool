@@ -22,7 +22,7 @@ export interface MatchingConfig {
   hierarchyDetection: boolean;
   domainEnrichment: boolean;
   domainColumn: string;
-  enrichmentProvider: 'clearbit' | 'openai' | 'perplexica';
+  enrichmentProvider: 'clearbit' | 'openai' | 'perplexica' | 'claude';
   enrichmentApiKey?: string;
   perplexicaUrl?: string;
   extendedEnrichment: boolean;

@@ -7,8 +7,8 @@ interface DomainEnrichmentProps {
   columns: string[];
   selectedColumn: string;
   onColumnSelect: (column: string) => void;
-  provider: 'clearbit' | 'openai' | 'perplexica';
-  onProviderChange: (provider: 'clearbit' | 'openai' | 'perplexica') => void;
+  provider: 'clearbit' | 'openai' | 'perplexica' | 'claude';
+  onProviderChange: (provider: 'clearbit' | 'openai' | 'perplexica' | 'claude') => void;
   apiKey: string;
   onApiKeyChange: (apiKey: string) => void;
   perplexicaUrl?: string;
@@ -91,11 +91,12 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
             >
               <option value="clearbit">Clearbit (Free - Basic Info)</option>
               <option value="openai">OpenAI (Requires API Key - Extended Info)</option>
+              <option value="claude">Claude (Requires API Key - Extended Info)</option>
               <option value="perplexica">Perplexity (Requires API Key - Extended Info)</option>
             </select>
           </div>
 
-          {(provider === 'openai' || provider === 'perplexica') && (
+          {(provider === 'openai' || provider === 'claude' || provider === 'perplexica') && (
             <>
               {provider === 'perplexica' ? (
                 <div>
@@ -122,7 +123,7 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                     type="password"
                     value={apiKey}
                     onChange={(e) => onApiKeyChange(e.target.value)}
-                    placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : 'Perplexity'} API key`}
+                    placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : provider === 'claude' ? 'Anthropic' : 'Perplexity'} API key`}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
@@ -160,7 +161,10 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                     <li>• Looks up company names using Clearbit API (free tier)</li>
                   )}
                   {provider === 'openai' && (
-                    <li>• Uses GPT-4o-mini to research companies with real-time data</li>
+                    <li>• Uses GPT-4o to research companies with real-time data</li>
+                  )}
+                  {provider === 'claude' && (
+                    <li>• Uses Claude 3.5 Sonnet to research companies with comprehensive analysis</li>
                   )}
                   {provider === 'perplexica' && (
                     <li>• Uses self-hosted Perplexica with web search for current company data</li>
@@ -178,7 +182,7 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                 <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <div className="text-xs text-yellow-800">
                   <p className="font-medium mb-1">Note:</p>
-                  <p>Free tier has rate limits. For extended firmographics, use OpenAI or Perplexity.</p>
+                  <p>Free tier has rate limits. For extended firmographics, use OpenAI, Claude, or Perplexity.</p>
                 </div>
               </div>
             </div>

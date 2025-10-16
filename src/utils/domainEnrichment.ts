@@ -12,7 +12,7 @@ export interface EnrichmentResult {
   employeeCount?: string;
   revenue?: string;
   founded?: string;
-  provider?: 'clearbit' | 'openai' | 'perplexica';
+  provider?: 'clearbit' | 'openai' | 'perplexica' | 'claude';
 }
 
 export class DomainEnrichment {
@@ -40,7 +40,7 @@ export class DomainEnrichment {
 
   static async enrichDomain(
     domain: string,
-    provider: 'clearbit' | 'openai' | 'perplexica' = 'clearbit',
+    provider: 'clearbit' | 'openai' | 'perplexica' | 'claude' = 'clearbit',
     apiKey?: string,
     extended: boolean = false,
     perplexicaUrl?: string
@@ -55,6 +55,8 @@ export class DomainEnrichment {
     try {
       if (provider === 'openai' && apiKey && extended) {
         return await this.enrichWithOpenAI(domain, normalized, apiKey, cacheKey);
+      } else if (provider === 'claude' && apiKey && extended) {
+        return await this.enrichWithClaude(domain, normalized, apiKey, cacheKey);
       } else if (provider === 'perplexica' && perplexicaUrl && extended) {
         return await this.enrichWithPerplexica(domain, normalized, perplexicaUrl, cacheKey);
       } else {
@@ -181,6 +183,85 @@ export class DomainEnrichment {
       return result;
     } catch (parseError) {
       throw new Error('Failed to parse OpenAI response');
+    }
+  }
+
+  private static async enrichWithClaude(
+    domain: string,
+    normalized: string,
+    apiKey: string,
+    cacheKey: string
+  ): Promise<EnrichmentResult> {
+    console.log('Claude: Enriching domain:', domain);
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news. Provide comprehensive, specific information:
+
+1. **companyName**: Full official company name (legal name if different from brand)
+2. **headquarters**: Specific address format "City, State/Province, Country" (e.g., "San Francisco, California, USA" not just "San Francisco, USA")
+3. **description**: Write 3-4 detailed sentences covering:
+   - What products/services they offer
+   - Their target market and customers
+   - What makes them unique or notable
+   - Their business model or key value proposition
+4. **industry**: Be specific (e.g., "Enterprise SaaS - Customer Relationship Management" not just "Software")
+5. **employeeCount**: Research current count, use ranges: "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"
+6. **revenue**: Annual revenue with currency, ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"
+7. **founded**: Exact year (YYYY)
+
+Return ONLY valid JSON. Be thorough and specific - this is for business intelligence purposes.`
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Claude API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.content?.[0]?.text;
+
+    if (!content) {
+      throw new Error('No content in Claude response');
+    }
+
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in Claude response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      const result: EnrichmentResult = {
+        domain,
+        companyName: parsed.companyName || this.generateFallbackCompanyName(domain),
+        normalizedDomain: normalized,
+        success: true,
+        headquarters: parsed.headquarters,
+        description: parsed.description,
+        industry: parsed.industry,
+        employeeCount: parsed.employeeCount,
+        revenue: parsed.revenue,
+        founded: parsed.founded,
+        provider: 'claude'
+      };
+      this.cache.set(cacheKey, result);
+      return result;
+    } catch (parseError) {
+      throw new Error('Failed to parse Claude response');
     }
   }
 
