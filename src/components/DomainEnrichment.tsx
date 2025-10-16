@@ -54,9 +54,10 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
     { id: 'funding', label: 'Total Funding', description: 'Total funding raised' },
     { id: 'funding_type', label: 'Latest Funding Type', description: 'Latest funding round type' },
     { id: 'funding_stage', label: 'Funding Stage', description: 'Pre-seed, Series A-G, etc.' },
-    { id: 'business_type', label: 'Business Type', description: 'Digital Native / Transformed / Traditional' },
+    { id: 'business_type', label: 'Business Type', description: 'DNB / Mature DNB / Digitally Transformed / Traditional' },
     { id: 'revenue_model', label: 'Revenue Model', description: 'Subscription, B2B, Commission, etc.' },
-    { id: 'company_stage', label: 'Company Stage', description: 'Startup / Growth / Established' }
+    { id: 'company_stage', label: 'Company Stage', description: 'Startup / Growth / Established' },
+    { id: 'ticker_symbol', label: 'Ticker Symbol', description: 'Stock ticker for public companies' }
   ];
 
   const toggleField = (fieldId: string) => {
