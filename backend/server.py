@@ -184,6 +184,7 @@ async def enrich_with_openai(domain: str, fields: List[str], api_key: str) -> En
                 businessType=parsed.get("businessType"),
                 revenueModel=parsed.get("revenueModel"),
                 companyStage=parsed.get("companyStage"),
+                tickerSymbol=parsed.get("tickerSymbol"),
                 provider="openai"
             )
         except json.JSONDecodeError as e:
