@@ -71,6 +71,21 @@ export class BackendApi {
     }
   }
 
+  static async clearCache() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/clear-cache`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        throw new Error(`Clear cache API error: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Clear cache API error:', error);
+      throw error;
+    }
+  }
+
   static extractDomain(email: string): string | null {
     const emailPattern = /[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
     const match = email.match(emailPattern);
