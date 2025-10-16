@@ -134,7 +134,9 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
         <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
           <CheckCircle className="h-5 w-5 text-green-500" />
           <span className="text-sm text-green-700">
-            Processing completed successfully! Review the matches below.
+            {isEnrichmentMode 
+              ? `Processing completed! ${stats.enrichedRows || 0} rows enriched successfully. View results below.`
+              : 'Processing completed successfully! Review the matches below.'}
           </span>
         </div>
       )}
@@ -143,7 +145,9 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
         <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-2">
           <AlertCircle className="h-5 w-5 text-gray-500" />
           <span className="text-sm text-gray-600">
-            Ready to process. Configure your settings and click "Find Duplicates" to begin.
+            {isEnrichmentMode 
+              ? 'Ready to enrich. Configure your settings and click "Enrich Data" to begin.'
+              : 'Ready to process. Configure your settings and click "Find Duplicates" to begin.'}
           </span>
         </div>
       )}
