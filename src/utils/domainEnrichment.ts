@@ -87,7 +87,9 @@ export class DomainEnrichment {
     console.log('Clearbit: Enriching domain:', domain);
 
     try {
-      const response = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(domain)}`);
+      // Use allorigins CORS proxy for Clearbit API
+      const apiUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${domain}`)}`;
+      const response = await fetch(apiUrl);
       console.log('Clearbit response status:', response.status);
 
       if (response.ok) {
@@ -109,7 +111,7 @@ export class DomainEnrichment {
       }
     } catch (error) {
       console.error('Clearbit API error:', error);
-      throw error;
+      // Don't throw, just continue to fallback
     }
 
     console.log('Clearbit: No results found for', domain);
