@@ -60,7 +60,7 @@ export class EnrichmentService {
 
           // Use frontend enrichment for cloudflare
           if (provider === 'cloudflare') {
-            const extended = fields.length > 1;
+            const extended = fields.length > 0;
             const result = await DomainEnrichment.enrichDomain(
               domain,
               provider,

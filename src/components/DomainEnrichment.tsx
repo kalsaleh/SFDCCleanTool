@@ -159,33 +159,38 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <input
-                      type="checkbox"
-                      id="useEmergentKey"
-                      checked={useEmergentKey}
-                      onChange={(e) => onUseEmergentKeyChange(e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="useEmergentKey" className="flex-1 text-sm">
-                      <span className="font-medium text-blue-900">Use Emergent LLM Key</span>
-                      <p className="text-xs text-blue-700">Universal key for OpenAI & Claude (No setup needed)</p>
-                    </label>
-                  </div>
-                  
-                  {!useEmergentKey && (
+                  {(provider === 'openai' || provider === 'claude') && (
+                    <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <input
+                        type="checkbox"
+                        id="useEmergentKey"
+                        checked={useEmergentKey}
+                        onChange={(e) => onUseEmergentKeyChange(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="useEmergentKey" className="flex-1 text-sm">
+                        <span className="font-medium text-blue-900">Use Emergent LLM Key</span>
+                        <p className="text-xs text-blue-700">Universal key for OpenAI & Claude (No setup needed)</p>
+                      </label>
+                    </div>
+                  )}
+
+                  {(provider === 'cloudflare' || !useEmergentKey) && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
                         <Key className="h-4 w-4" />
-                        <span>Custom API Key</span>
+                        <span>{provider === 'cloudflare' ? 'Cloudflare API Key' : 'Custom API Key'}</span>
                       </label>
                       <input
                         type="password"
                         value={apiKey}
                         onChange={(e) => onApiKeyChange(e.target.value)}
-                        placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : provider === 'claude' ? 'Anthropic' : 'Cloudflare (accountId:token)'} API key`}
+                        placeholder={provider === 'cloudflare' ? 'accountId:apiToken' : `Enter your ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key`}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
+                      {provider === 'cloudflare' && (
+                        <p className="text-xs text-gray-500 mt-1">Get your API key from Cloudflare dashboard: Workers & Pages → API tokens</p>
+                      )}
                     </div>
                   )}
                 </div>
