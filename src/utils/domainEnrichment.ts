@@ -12,7 +12,7 @@ export interface EnrichmentResult {
   employeeCount?: string;
   revenue?: string;
   founded?: string;
-  provider?: 'clearbit' | 'openai' | 'perplexica' | 'claude';
+  provider?: 'clearbit' | 'openai' | 'perplexica' | 'claude' | 'cloudflare';
 }
 
 export class DomainEnrichment {
@@ -40,7 +40,7 @@ export class DomainEnrichment {
 
   static async enrichDomain(
     domain: string,
-    provider: 'clearbit' | 'openai' | 'perplexica' | 'claude' = 'clearbit',
+    provider: 'clearbit' | 'openai' | 'perplexica' | 'claude' | 'cloudflare' = 'clearbit',
     apiKey?: string,
     extended: boolean = false,
     perplexicaUrl?: string
@@ -57,6 +57,8 @@ export class DomainEnrichment {
         return await this.enrichWithOpenAI(domain, normalized, apiKey, cacheKey);
       } else if (provider === 'claude' && apiKey && extended) {
         return await this.enrichWithClaude(domain, normalized, apiKey, cacheKey);
+      } else if (provider === 'cloudflare' && apiKey && extended) {
+        return await this.enrichWithCloudflare(domain, normalized, apiKey, cacheKey);
       } else if (provider === 'perplexica' && perplexicaUrl && extended) {
         return await this.enrichWithPerplexica(domain, normalized, perplexicaUrl, cacheKey);
       } else {
@@ -262,6 +264,93 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
       return result;
     } catch (parseError) {
       throw new Error('Failed to parse Claude response');
+    }
+  }
+
+  private static async enrichWithCloudflare(
+    domain: string,
+    normalized: string,
+    apiKey: string,
+    cacheKey: string
+  ): Promise<EnrichmentResult> {
+    console.log('Cloudflare AI: Enriching domain:', domain);
+
+    const accountId = apiKey.split(':')[0];
+    const token = apiKey.split(':')[1];
+
+    if (!accountId || !token) {
+      throw new Error('Cloudflare API key must be in format "accountId:apiToken"');
+    }
+
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a business intelligence assistant. Respond with only valid JSON, no markdown or additional text.'
+            },
+            {
+              role: 'user',
+              content: `Research the company with domain "${domain}". Provide comprehensive information:
+
+1. **companyName**: Full official company name
+2. **headquarters**: Specific address format "City, State/Province, Country"
+3. **description**: Write 3-4 detailed sentences covering products/services, target market, what makes them unique, and business model
+4. **industry**: Be specific (e.g., "Enterprise SaaS - CRM" not just "Software")
+5. **employeeCount**: Use ranges: "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"
+6. **revenue**: Annual revenue ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"
+7. **founded**: Exact year (YYYY)
+
+Return ONLY valid JSON.`
+            }
+          ],
+          stream: false
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Cloudflare AI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.result?.response;
+
+    if (!content) {
+      throw new Error('No content in Cloudflare AI response');
+    }
+
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in Cloudflare AI response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      const result: EnrichmentResult = {
+        domain,
+        companyName: parsed.companyName || this.generateFallbackCompanyName(domain),
+        normalizedDomain: normalized,
+        success: true,
+        headquarters: parsed.headquarters,
+        description: parsed.description,
+        industry: parsed.industry,
+        employeeCount: parsed.employeeCount,
+        revenue: parsed.revenue,
+        founded: parsed.founded,
+        provider: 'cloudflare'
+      };
+      this.cache.set(cacheKey, result);
+      return result;
+    } catch (parseError) {
+      throw new Error('Failed to parse Cloudflare AI response');
     }
   }
 

@@ -7,8 +7,8 @@ interface DomainEnrichmentProps {
   columns: string[];
   selectedColumn: string;
   onColumnSelect: (column: string) => void;
-  provider: 'openai' | 'perplexica' | 'claude';
-  onProviderChange: (provider: 'openai' | 'perplexica' | 'claude') => void;
+  provider: 'clearbit' | 'openai' | 'perplexica' | 'claude' | 'cloudflare';
+  onProviderChange: (provider: 'clearbit' | 'openai' | 'perplexica' | 'claude' | 'cloudflare') => void;
   apiKey: string;
   onApiKeyChange: (apiKey: string) => void;
   perplexicaUrl?: string;
@@ -132,14 +132,16 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
               onChange={(e) => onProviderChange(e.target.value as any)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option value="openai">OpenAI GPT-4o (Recommended)</option>
+              <option value="clearbit">Clearbit (Free - Basic Info)</option>
+              <option value="cloudflare">Cloudflare AI (Free - Extended Info)</option>
+              <option value="openai">OpenAI GPT-4o</option>
               <option value="claude">Claude 3.5 Sonnet</option>
               <option value="perplexica">Perplexica (Self-hosted)</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">All providers use live data and web search</p>
+            <p className="text-xs text-gray-500 mt-1">Cloudflare AI is free with generous limits</p>
           </div>
 
-          {(provider === 'openai' || provider === 'claude' || provider === 'perplexica') && (
+          {(provider === 'openai' || provider === 'claude' || provider === 'cloudflare' || provider === 'perplexica') && (
             <>
               {provider === 'perplexica' ? (
                 <div>
@@ -182,7 +184,7 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                         type="password"
                         value={apiKey}
                         onChange={(e) => onApiKeyChange(e.target.value)}
-                        placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key`}
+                        placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : provider === 'claude' ? 'Anthropic' : 'Cloudflare (accountId:token)'} API key`}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                     </div>
@@ -252,11 +254,17 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                 <p className="font-medium mb-1">How it works:</p>
                 <ul className="space-y-1 text-xs">
                   <li>• Extracts domains from emails or URLs</li>
+                  {provider === 'clearbit' && (
+                    <li>• Looks up company names using Clearbit API (free tier)</li>
+                  )}
                   {provider === 'openai' && (
                     <li>• Uses GPT-4o to research companies with real-time web data</li>
                   )}
                   {provider === 'claude' && (
                     <li>• Uses Claude 3.5 Sonnet to research companies with comprehensive analysis</li>
+                  )}
+                  {provider === 'cloudflare' && (
+                    <li>• Uses Llama 3.1 8B on Cloudflare AI Workers (free with generous limits)</li>
                   )}
                   {provider === 'perplexica' && (
                     <li>• Uses self-hosted Perplexica with web search for current company data</li>
