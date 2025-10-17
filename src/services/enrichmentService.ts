@@ -8,7 +8,7 @@ export class EnrichmentService {
   static async enrichRows(
     rows: CSVRow[],
     domainColumn: string,
-    provider: 'clearbit' | 'openai' | 'claude' | 'perplexica' | 'cloudflare',
+    provider: 'openai' | 'claude' | 'perplexica' | 'cloudflare',
     fields: string[],
     useEmergentKey: boolean,
     customApiKey?: string,
@@ -58,8 +58,8 @@ export class EnrichmentService {
         } else {
           let enrichment: EnrichmentResponse;
 
-          // Use frontend enrichment for clearbit and cloudflare
-          if (provider === 'clearbit' || provider === 'cloudflare') {
+          // Use frontend enrichment for cloudflare
+          if (provider === 'cloudflare') {
             const extended = fields.length > 1;
             const result = await DomainEnrichment.enrichDomain(
               domain,

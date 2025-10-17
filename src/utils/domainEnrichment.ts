@@ -12,7 +12,7 @@ export interface EnrichmentResult {
   employeeCount?: string;
   revenue?: string;
   founded?: string;
-  provider?: 'clearbit' | 'openai' | 'perplexica' | 'claude' | 'cloudflare';
+  provider?: 'openai' | 'perplexica' | 'claude' | 'cloudflare';
 }
 
 export class DomainEnrichment {
@@ -40,7 +40,7 @@ export class DomainEnrichment {
 
   static async enrichDomain(
     domain: string,
-    provider: 'clearbit' | 'openai' | 'perplexica' | 'claude' | 'cloudflare' = 'clearbit',
+    provider: 'openai' | 'perplexica' | 'claude' | 'cloudflare' = 'cloudflare',
     apiKey?: string,
     extended: boolean = false,
     perplexicaUrl?: string
@@ -53,16 +53,16 @@ export class DomainEnrichment {
     }
 
     try {
-      if (provider === 'openai' && apiKey && extended) {
+      if (provider === 'openai' && apiKey) {
         return await this.enrichWithOpenAI(domain, normalized, apiKey, cacheKey);
-      } else if (provider === 'claude' && apiKey && extended) {
+      } else if (provider === 'claude' && apiKey) {
         return await this.enrichWithClaude(domain, normalized, apiKey, cacheKey);
-      } else if (provider === 'cloudflare' && apiKey && extended) {
+      } else if (provider === 'cloudflare' && apiKey) {
         return await this.enrichWithCloudflare(domain, normalized, apiKey, cacheKey);
-      } else if (provider === 'perplexica' && perplexicaUrl && extended) {
+      } else if (provider === 'perplexica' && perplexicaUrl) {
         return await this.enrichWithPerplexica(domain, normalized, perplexicaUrl, cacheKey);
       } else {
-        return await this.enrichWithClearbit(domain, normalized, cacheKey);
+        throw new Error(`Missing API key or URL for provider: ${provider}`);
       }
     } catch (error) {
       const fallbackName = this.generateFallbackCompanyName(domain);
@@ -77,55 +77,6 @@ export class DomainEnrichment {
       this.cache.set(cacheKey, result);
       return result;
     }
-  }
-
-  private static async enrichWithClearbit(
-    domain: string,
-    normalized: string,
-    cacheKey: string
-  ): Promise<EnrichmentResult> {
-    console.log('Clearbit: Enriching domain:', domain);
-
-    try {
-      // Use allorigins CORS proxy for Clearbit API
-      const apiUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${domain}`)}`;
-      const response = await fetch(apiUrl);
-      console.log('Clearbit response status:', response.status);
-
-      if (response.ok) {
-        const results = await response.json();
-        console.log('Clearbit results for', domain, ':', results);
-
-        if (results && results.length > 0) {
-          const result: EnrichmentResult = {
-            domain,
-            companyName: results[0].name,
-            normalizedDomain: normalized,
-            success: true,
-            provider: 'clearbit'
-          };
-          this.cache.set(cacheKey, result);
-          console.log('Clearbit success:', result.companyName);
-          return result;
-        }
-      }
-    } catch (error) {
-      console.error('Clearbit API error:', error);
-      // Don't throw, just continue to fallback
-    }
-
-    console.log('Clearbit: No results found for', domain);
-    const fallbackName = this.generateFallbackCompanyName(domain);
-    const result: EnrichmentResult = {
-      domain,
-      companyName: fallbackName,
-      normalizedDomain: normalized,
-      success: false,
-      error: 'No data found from Clearbit',
-      provider: 'clearbit'
-    };
-    this.cache.set(cacheKey, result);
-    return result;
   }
 
   private static async enrichWithOpenAI(

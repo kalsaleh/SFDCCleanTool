@@ -43,7 +43,7 @@ function App() {
     hierarchyDetection: true,
     domainEnrichment: false,
     domainColumn: '',
-    enrichmentProvider: 'openai',
+    enrichmentProvider: 'cloudflare',
     enrichmentApiKey: '',
     perplexicaUrl: '',
     extendedEnrichment: false,
