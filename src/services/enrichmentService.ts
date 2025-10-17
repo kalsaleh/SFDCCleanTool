@@ -1,5 +1,6 @@
 import { BackendApi, EnrichmentResponse } from './backendApi';
 import { CSVRow } from '../types';
+import { DomainEnrichment } from '../utils/domainEnrichment';
 
 export class EnrichmentService {
   private static cache = new Map<string, EnrichmentResponse>();
@@ -7,7 +8,7 @@ export class EnrichmentService {
   static async enrichRows(
     rows: CSVRow[],
     domainColumn: string,
-    provider: 'openai' | 'claude' | 'perplexica',
+    provider: 'clearbit' | 'openai' | 'claude' | 'perplexica' | 'cloudflare',
     fields: string[],
     useEmergentKey: boolean,
     customApiKey?: string,
@@ -55,14 +56,42 @@ export class EnrichmentService {
           enrichmentMap.set(i, cachedResult);
           if (cachedResult.success) enrichedCount++;
         } else {
-          // Call backend API
-          const enrichment = await BackendApi.enrichDomain({
-            domain,
-            provider,
-            fields,
-            custom_api_key: !useEmergentKey ? customApiKey : undefined,
-            perplexica_url: perplexicaUrl
-          });
+          let enrichment: EnrichmentResponse;
+
+          // Use frontend enrichment for clearbit and cloudflare
+          if (provider === 'clearbit' || provider === 'cloudflare') {
+            const extended = fields.length > 1;
+            const result = await DomainEnrichment.enrichDomain(
+              domain,
+              provider,
+              customApiKey,
+              extended
+            );
+
+            enrichment = {
+              domain: result.domain,
+              companyName: result.companyName,
+              normalizedDomain: result.normalizedDomain,
+              success: result.success,
+              error: result.error,
+              headquarters: result.headquarters,
+              description: result.description,
+              industry: result.industry,
+              employeeCount: result.employeeCount,
+              revenue: result.revenue,
+              founded: result.founded,
+              provider: result.provider || provider
+            };
+          } else {
+            // Call backend API for openai, claude, perplexica
+            enrichment = await BackendApi.enrichDomain({
+              domain,
+              provider: provider as 'openai' | 'claude' | 'perplexica',
+              fields,
+              custom_api_key: !useEmergentKey ? customApiKey : undefined,
+              perplexica_url: perplexicaUrl
+            });
+          }
 
           this.cache.set(cacheKey, enrichment);
           enrichmentMap.set(i, enrichment);
