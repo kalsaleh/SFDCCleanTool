@@ -19,6 +19,7 @@ import { CSVRow, MatchResult, MatchingConfig as Config, ProcessingStats } from '
 import * as XLSX from 'xlsx';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<'setup' | 'results'>('setup');
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: CSVRow[] } | null>(null);
   const [availableColumns, setAvailableColumns] = useState<string[]>([]);
   const [filename, setFilename] = useState<string>('');
@@ -309,6 +310,8 @@ function App() {
         alert('No duplicates found with the current settings. Try lowering the similarity threshold.');
       }
 
+      setActiveTab('results');
+
     } catch (error) {
       console.error('Error processing data:', error);
       alert('Error processing data: ' + (error instanceof Error ? error.message : String(error)));
@@ -536,8 +539,38 @@ function App() {
             <FileUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
           )}
 
-          {/* Configuration */}
+          {/* Tabs */}
           {csvData && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="border-b border-gray-200">
+                <nav className="flex -mb-px">
+                  <button
+                    onClick={() => setActiveTab('setup')}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'setup'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Setup & Configuration
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('results')}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'results'
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Results
+                  </button>
+                </nav>
+              </div>
+            </div>
+          )}
+
+          {/* Configuration */}
+          {csvData && activeTab === 'setup' && (
             <>
               <OperationMode
                 mode={config.operationMode}
@@ -621,6 +654,12 @@ function App() {
                 operationMode={config.operationMode}
               />
 
+            </>
+          )}
+
+          {/* Results Tab */}
+          {csvData && activeTab === 'results' && (
+            <>
               {/* Enriched Results Table */}
               {enrichmentData.size > 0 && (
                 <EnrichedResultsTable
@@ -632,7 +671,7 @@ function App() {
                 />
               )}
 
-              {/* Results */}
+              {/* Duplicate Results */}
               {matches.length > 0 && (
                 <MatchResults
                   matches={matches}
@@ -640,6 +679,23 @@ function App() {
                   onBulkAction={handleBulkAction}
                   onExport={exportCSV}
                 />
+              )}
+
+              {/* No Results Message */}
+              {enrichmentData.size === 0 && matches.length === 0 && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                  <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Results Yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Process your data in the Setup tab to see results here.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('setup')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Go to Setup
+                  </button>
+                </div>
               )}
             </>
           )}
