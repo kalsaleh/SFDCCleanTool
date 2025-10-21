@@ -13,6 +13,7 @@ export class EnrichmentService {
     useEmergentKey: boolean,
     customApiKey?: string,
     perplexicaUrl?: string,
+    enrichmentType: 'domain' | 'company' = 'domain',
     onProgress?: (progress: number, enrichedCount: number) => void
   ): Promise<Map<number, EnrichmentResponse>> {
     const enrichmentMap = new Map<number, EnrichmentResponse>();
@@ -35,22 +36,31 @@ export class EnrichmentService {
           continue;
         }
 
-        const domain = BackendApi.extractDomain(value);
-        if (!domain) {
-          enrichmentMap.set(i, {
-            domain: value,
-            normalizedDomain: value,
-            success: false,
-            error: 'Could not extract domain',
-            provider
-          });
-          continue;
+        let domain = value;
+        let normalized = value;
+
+        // For domain type, extract and normalize domain
+        if (enrichmentType === 'domain') {
+          domain = BackendApi.extractDomain(value);
+          if (!domain) {
+            enrichmentMap.set(i, {
+              domain: value,
+              normalizedDomain: value,
+              success: false,
+              error: 'Could not extract domain',
+              provider
+            });
+            continue;
+          }
+          normalized = BackendApi.normalizeDomain(domain);
+        } else {
+          // For company type, use the value as-is
+          normalized = value.toLowerCase().trim();
         }
 
         // Check cache
-        const normalized = BackendApi.normalizeDomain(domain);
-        const cacheKey = `${normalized}-${provider}-${fields.join(',')}`;
-        
+        const cacheKey = `${normalized}-${provider}-${fields.join(',')}-${enrichmentType}`;
+
         if (this.cache.has(cacheKey)) {
           const cachedResult = this.cache.get(cacheKey)!;
           enrichmentMap.set(i, cachedResult);
@@ -65,7 +75,8 @@ export class EnrichmentService {
               domain,
               provider,
               customApiKey,
-              extended
+              extended,
+              enrichmentType
             );
 
             enrichment = {

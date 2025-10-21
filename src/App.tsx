@@ -43,6 +43,7 @@ function App() {
     hierarchyDetection: true,
     domainEnrichment: false,
     domainColumn: '',
+    enrichmentType: 'domain',
     enrichmentProvider: 'cloudflare',
     enrichmentApiKey: '',
     perplexicaUrl: '',
@@ -155,7 +156,7 @@ function App() {
       const shouldFindDuplicates = config.operationMode === 'duplicates-only' || config.operationMode === 'both';
 
       if (shouldEnrich && config.domainEnrichment && config.domainColumn) {
-        setCurrentStep('Enriching domains with company data...');
+        setCurrentStep(config.enrichmentType === 'company' ? 'Enriching company names...' : 'Enriching domains with company data...');
         const enrichments = await EnrichmentService.enrichRows(
           csvData.rows,
           config.domainColumn,
@@ -164,6 +165,7 @@ function App() {
           config.useEmergentKey,
           config.enrichmentApiKey,
           config.perplexicaUrl,
+          config.enrichmentType || 'domain',
           (progress, currentEnrichedCount) => {
             const progressValue = shouldFindDuplicates ? progress * 0.2 : progress;
             setProgress(progressValue);
@@ -562,6 +564,8 @@ function App() {
                   columns={csvData.headers}
                   selectedColumn={config.domainColumn}
                   onColumnSelect={(column) => setConfig(prev => ({ ...prev, domainColumn: column }))}
+                  enrichmentType={config.enrichmentType || 'domain'}
+                  onEnrichmentTypeChange={(type) => setConfig(prev => ({ ...prev, enrichmentType: type }))}
                   provider={config.enrichmentProvider}
                   onProviderChange={(provider) => setConfig(prev => ({ ...prev, enrichmentProvider: provider }))}
                   apiKey={config.enrichmentApiKey || ''}

@@ -43,10 +43,11 @@ export class DomainEnrichment {
     provider: 'openai' | 'perplexica' | 'claude' | 'cloudflare' = 'cloudflare',
     apiKey?: string,
     extended: boolean = false,
+    enrichmentType: 'domain' | 'company' = 'domain',
     perplexicaUrl?: string
   ): Promise<EnrichmentResult> {
-    const normalized = this.normalizeDomain(domain);
-    const cacheKey = `${normalized}-${provider}-${extended}`;
+    const normalized = enrichmentType === 'domain' ? this.normalizeDomain(domain) : domain.toLowerCase().trim();
+    const cacheKey = `${normalized}-${provider}-${extended}-${enrichmentType}`;
 
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
@@ -54,18 +55,18 @@ export class DomainEnrichment {
 
     try {
       if (provider === 'openai' && apiKey) {
-        return await this.enrichWithOpenAI(domain, normalized, apiKey, cacheKey);
+        return await this.enrichWithOpenAI(domain, normalized, apiKey, cacheKey, enrichmentType);
       } else if (provider === 'claude' && apiKey) {
-        return await this.enrichWithClaude(domain, normalized, apiKey, cacheKey);
+        return await this.enrichWithClaude(domain, normalized, apiKey, cacheKey, enrichmentType);
       } else if (provider === 'cloudflare' && apiKey) {
-        return await this.enrichWithCloudflare(domain, normalized, apiKey, cacheKey);
+        return await this.enrichWithCloudflare(domain, normalized, apiKey, cacheKey, enrichmentType);
       } else if (provider === 'perplexica' && perplexicaUrl) {
-        return await this.enrichWithPerplexica(domain, normalized, perplexicaUrl, cacheKey);
+        return await this.enrichWithPerplexica(domain, normalized, perplexicaUrl, cacheKey, enrichmentType);
       } else {
         throw new Error(`Missing API key or URL for provider: ${provider}`);
       }
     } catch (error) {
-      const fallbackName = this.generateFallbackCompanyName(domain);
+      const fallbackName = enrichmentType === 'company' ? domain : this.generateFallbackCompanyName(domain);
       const result: EnrichmentResult = {
         domain,
         companyName: fallbackName,
@@ -83,8 +84,13 @@ export class DomainEnrichment {
     domain: string,
     normalized: string,
     apiKey: string,
-    cacheKey: string
+    cacheKey: string,
+    enrichmentType: 'domain' | 'company' = 'domain'
   ): Promise<EnrichmentResult> {
+    const queryText = enrichmentType === 'company'
+      ? `Research the company named "${domain}" thoroughly.`
+      : `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news.`;
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -100,7 +106,7 @@ export class DomainEnrichment {
           },
           {
             role: 'user',
-            content: `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news. Provide comprehensive, specific information:\n\n1. **companyName**: Full official company name (legal name if different from brand)\n2. **headquarters**: Specific address format "City, State/Province, Country" (e.g., "San Francisco, California, USA" not just "San Francisco, USA")\n3. **description**: Write 3-4 detailed sentences covering:\n   - What products/services they offer\n   - Their target market and customers\n   - What makes them unique or notable\n   - Their business model or key value proposition\n4. **industry**: Be specific (e.g., "Enterprise SaaS - Customer Relationship Management" not just "Software")\n5. **employeeCount**: Research current count, use ranges: "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"\n6. **revenue**: Annual revenue with currency, ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"\n7. **founded**: Exact year (YYYY)\n\nReturn ONLY valid JSON. Be thorough and specific - this is for business intelligence purposes.`
+            content: queryText + ` Provide comprehensive, specific information:\n\n1. **companyName**: Full official company name (legal name if different from brand)\n2. **headquarters**: Specific address format "City, State/Province, Country" (e.g., "San Francisco, California, USA" not just "San Francisco, USA")\n3. **description**: Write 3-4 detailed sentences covering:\n   - What products/services they offer\n   - Their target market and customers\n   - What makes them unique or notable\n   - Their business model or key value proposition\n4. **industry**: Be specific (e.g., "Enterprise SaaS - Customer Relationship Management" not just "Software")\n5. **employeeCount**: Research current count, use ranges: "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"\n6. **revenue**: Annual revenue with currency, ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"\n7. **founded**: Exact year (YYYY)\n\nReturn ONLY valid JSON. Be thorough and specific - this is for business intelligence purposes.`
           }
         ],
         temperature: 0.1,
@@ -145,9 +151,14 @@ export class DomainEnrichment {
     domain: string,
     normalized: string,
     apiKey: string,
-    cacheKey: string
+    cacheKey: string,
+    enrichmentType: 'domain' | 'company' = 'domain'
   ): Promise<EnrichmentResult> {
-    console.log('Claude: Enriching domain:', domain);
+    console.log(`Claude: Enriching ${enrichmentType}:`, domain);
+
+    const queryText = enrichmentType === 'company'
+      ? `Research the company named "${domain}" thoroughly.`
+      : `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -162,7 +173,7 @@ export class DomainEnrichment {
         messages: [
           {
             role: 'user',
-            content: `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news. Provide comprehensive, specific information:
+            content: queryText + ` Provide comprehensive, specific information:
 
 1. **companyName**: Full official company name (legal name if different from brand)
 2. **headquarters**: Specific address format "City, State/Province, Country" (e.g., "San Francisco, California, USA" not just "San Francisco, USA")
@@ -224,9 +235,10 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
     domain: string,
     normalized: string,
     apiKey: string,
-    cacheKey: string
+    cacheKey: string,
+    enrichmentType: 'domain' | 'company' = 'domain'
   ): Promise<EnrichmentResult> {
-    console.log('Cloudflare AI: Enriching domain:', domain);
+    console.log(`Cloudflare AI: Enriching ${enrichmentType}:`, domain);
 
     const parts = apiKey.split(':');
     if (parts.length !== 2) {
@@ -241,6 +253,10 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
     }
 
     console.log('Using Cloudflare account:', accountId);
+
+    const queryText = enrichmentType === 'company'
+      ? `Research the company named "${domain}". Provide comprehensive information:`
+      : `Research the company with domain "${domain}". Provide comprehensive information:`;
 
     const response = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
@@ -258,7 +274,7 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
             },
             {
               role: 'user',
-              content: `Research the company with domain "${domain}". Provide comprehensive information:
+              content: queryText + `
 
 1. **companyName**: Full official company name
 2. **headquarters**: Specific address format "City, State/Province, Country"
@@ -325,11 +341,16 @@ Return ONLY valid JSON.`
     domain: string,
     normalized: string,
     perplexicaUrl: string,
-    cacheKey: string
+    cacheKey: string,
+    enrichmentType: 'domain' | 'company' = 'domain'
   ): Promise<EnrichmentResult> {
-    console.log('Perplexica: Enriching domain:', domain, 'using URL:', perplexicaUrl);
+    console.log(`Perplexica: Enriching ${enrichmentType}:`, domain, 'using URL:', perplexicaUrl);
 
     const apiUrl = perplexicaUrl.endsWith('/') ? `${perplexicaUrl}api/search` : `${perplexicaUrl}/api/search`;
+
+    const queryStart = enrichmentType === 'company'
+      ? `Conduct comprehensive research on the company named "${domain}".`
+      : `Conduct comprehensive research on the company with domain "${domain}". Search their official website, company databases (LinkedIn, Crunchbase), and recent news articles.`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -338,7 +359,7 @@ Return ONLY valid JSON.`
       },
       body: JSON.stringify({
         focusMode: 'webSearch',
-        query: `Conduct comprehensive research on the company with domain "${domain}". Search their official website, company databases (LinkedIn, Crunchbase), and recent news articles. Provide highly detailed and specific information:
+        query: queryStart + ` Provide highly detailed and specific information:
 
 1. **companyName**: Full official legal company name
 2. **headquarters**: Complete address format "City, State/Province, Country" (e.g., "Austin, Texas, USA")

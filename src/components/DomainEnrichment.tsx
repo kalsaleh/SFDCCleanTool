@@ -7,6 +7,8 @@ interface DomainEnrichmentProps {
   columns: string[];
   selectedColumn: string;
   onColumnSelect: (column: string) => void;
+  enrichmentType: 'domain' | 'company';
+  onEnrichmentTypeChange: (type: 'domain' | 'company') => void;
   provider: 'cloudflare' | 'openai' | 'perplexica' | 'claude';
   onProviderChange: (provider: 'cloudflare' | 'openai' | 'perplexica' | 'claude') => void;
   apiKey: string;
@@ -27,6 +29,8 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
   columns,
   selectedColumn,
   onColumnSelect,
+  enrichmentType,
+  onEnrichmentTypeChange,
   provider,
   onProviderChange,
   apiKey,
@@ -80,6 +84,11 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
     return lower.includes('email') || lower.includes('domain') || lower.includes('website') || lower.includes('url');
   });
 
+  const companyNameColumns = columns.filter(col => {
+    const lower = col.toLowerCase();
+    return lower.includes('company') || lower.includes('account') || lower.includes('organization') || lower.includes('business');
+  });
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -105,21 +114,78 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Column with Email/Domain
+              Enrichment Type
             </label>
-            {emailDomainColumns.length > 0 ? (
+            <div className="flex space-x-4">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="domain"
+                  checked={enrichmentType === 'domain'}
+                  onChange={(e) => onEnrichmentTypeChange(e.target.value as 'domain' | 'company')}
+                  className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                />
+                <span className="text-sm text-gray-700">By Domain/Email</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="company"
+                  checked={enrichmentType === 'company'}
+                  onChange={(e) => onEnrichmentTypeChange(e.target.value as 'domain' | 'company')}
+                  className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                />
+                <span className="text-sm text-gray-700">By Company Name</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {enrichmentType === 'domain' ? 'Column with Email/Domain' : 'Column with Company Name'}
+            </label>
+            {enrichmentType === 'domain' ? (
+              emailDomainColumns.length > 0 ? (
+                <select
+                  value={selectedColumn}
+                  onChange={(e) => onColumnSelect(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Select column...</option>
+                  {emailDomainColumns.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm text-gray-500 italic">No email/domain columns detected</p>
+              )
+            ) : (
+              companyNameColumns.length > 0 ? (
+                <select
+                  value={selectedColumn}
+                  onChange={(e) => onColumnSelect(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Select column...</option>
+                  {companyNameColumns.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm text-gray-500 italic">No company name columns detected. You can still select any column:</p>
+              )
+            )}
+            {enrichmentType === 'company' && companyNameColumns.length === 0 && (
               <select
                 value={selectedColumn}
                 onChange={(e) => onColumnSelect(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent mt-2"
               >
                 <option value="">Select column...</option>
-                {emailDomainColumns.map(col => (
+                {columns.map(col => (
                   <option key={col} value={col}>{col}</option>
                 ))}
               </select>
-            ) : (
-              <p className="text-sm text-gray-500 italic">No email/domain columns detected</p>
             )}
           </div>
 
