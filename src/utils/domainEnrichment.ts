@@ -282,9 +282,9 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
     }
 
     const accountId = parts[0].trim();
-    const token = parts[1].trim();
+    const apiToken = parts[1].trim();
 
-    if (!accountId || !token) {
+    if (!accountId || !apiToken) {
       throw new Error('Cloudflare API key must be in format "accountId:apiToken"');
     }
 
@@ -294,23 +294,7 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
       ? `Research the company named "${domain}". Provide comprehensive information:`
       : `Research the company with domain "${domain}". Provide comprehensive information:`;
 
-    const response = await this.fetchWithRetry(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a business intelligence assistant. Respond with only valid JSON, no markdown or additional text.'
-            },
-            {
-              role: 'user',
-              content: queryText + `
+    const prompt = queryText + `
 
 1. **companyName**: Full official company name
 2. **headquarters**: Specific address format "City, State/Province, Country"
@@ -320,10 +304,26 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
 6. **revenue**: Annual revenue ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"
 7. **founded**: Exact year (YYYY)
 
-Return ONLY valid JSON.`
-            }
-          ],
-          stream: false
+Return ONLY valid JSON.`;
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/cloudflare-ai-proxy`;
+
+    const response = await this.fetchWithRetry(
+      edgeFunctionUrl,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey
+        },
+        body: JSON.stringify({
+          accountId,
+          apiToken,
+          prompt,
+          model: '@cf/meta/llama-3.1-8b-instruct'
         })
       }
     );
