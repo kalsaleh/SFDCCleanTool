@@ -50,7 +50,6 @@ function App() {
     perplexicaUrl: '',
     extendedEnrichment: false,
     enrichmentFields: ['industry', 'vertical', 'employees', 'hq_country', 'short_description', 'revenue', 'business_type', 'revenue_model', 'company_stage'],
-    useEmergentKey: true,
     operationMode: 'both'
   });
   const [enrichmentData, setEnrichmentData] = useState<Map<number, any>>(new Map());
@@ -163,7 +162,6 @@ function App() {
           config.domainColumn,
           config.enrichmentProvider,
           config.enrichmentFields,
-          config.useEmergentKey,
           config.enrichmentApiKey,
           config.perplexicaUrl,
           config.enrichmentType || 'domain',
@@ -609,8 +607,6 @@ function App() {
                   onExtendedToggle={(extended) => setConfig(prev => ({ ...prev, extendedEnrichment: extended }))}
                   enrichmentFields={config.enrichmentFields}
                   onFieldsChange={(fields) => setConfig(prev => ({ ...prev, enrichmentFields: fields }))}
-                  useEmergentKey={config.useEmergentKey}
-                  onUseEmergentKeyChange={(use) => setConfig(prev => ({ ...prev, useEmergentKey: use }))}
                 />
               )}
 

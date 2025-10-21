@@ -28,7 +28,6 @@ export interface MatchingConfig {
   perplexicaUrl?: string;
   extendedEnrichment: boolean;
   enrichmentFields: string[];
-  useEmergentKey: boolean;
   operationMode: 'enrich-only' | 'duplicates-only' | 'both';
 }
 

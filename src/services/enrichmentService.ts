@@ -10,7 +10,6 @@ export class EnrichmentService {
     domainColumn: string,
     provider: 'openai' | 'claude' | 'perplexica' | 'cloudflare',
     fields: string[],
-    useEmergentKey: boolean,
     customApiKey?: string,
     perplexicaUrl?: string,
     enrichmentType: 'domain' | 'company' = 'domain',
@@ -22,7 +21,7 @@ export class EnrichmentService {
 
     console.log(`=== ENRICHMENT START ===`);
     console.log(`Rows: ${rows.length}, Provider: ${provider}, Column: ${domainColumn}`);
-    console.log(`Has API key: ${!!customApiKey}, Use Emergent: ${useEmergentKey}`);
+    console.log(`Has API key: ${!!customApiKey}`);
     console.log(`Type: ${enrichmentType}, Fields: ${fields.join(', ')}`);
     console.log(`========================`);
 
@@ -105,7 +104,7 @@ export class EnrichmentService {
               domain,
               provider: provider as 'openai' | 'claude' | 'perplexica',
               fields,
-              custom_api_key: !useEmergentKey ? customApiKey : undefined,
+              custom_api_key: customApiKey,
               perplexica_url: perplexicaUrl
             });
           }

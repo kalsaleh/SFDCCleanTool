@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Zap, AlertCircle, Key, Sparkles, CheckSquare } from 'lucide-react';
+import { Globe, Zap, AlertCircle, Key, CheckSquare } from 'lucide-react';
 
 interface DomainEnrichmentProps {
   enabled: boolean;
@@ -19,8 +19,6 @@ interface DomainEnrichmentProps {
   onExtendedToggle: (extended: boolean) => void;
   enrichmentFields: string[];
   onFieldsChange: (fields: string[]) => void;
-  useEmergentKey: boolean;
-  onUseEmergentKeyChange: (use: boolean) => void;
 }
 
 export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
@@ -40,9 +38,7 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
   extendedEnrichment,
   onExtendedToggle,
   enrichmentFields,
-  onFieldsChange,
-  useEmergentKey,
-  onUseEmergentKeyChange
+  onFieldsChange
 }) => {
   const availableFields = [
     { id: 'industry', label: 'Industry', description: 'Company industry sector' },
@@ -225,40 +221,22 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {(provider === 'openai' || provider === 'claude') && (
-                    <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <input
-                        type="checkbox"
-                        id="useEmergentKey"
-                        checked={useEmergentKey}
-                        onChange={(e) => onUseEmergentKeyChange(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <label htmlFor="useEmergentKey" className="flex-1 text-sm">
-                        <span className="font-medium text-blue-900">Use Emergent LLM Key</span>
-                        <p className="text-xs text-blue-700">Universal key for OpenAI & Claude (No setup needed)</p>
-                      </label>
-                    </div>
-                  )}
-
-                  {(provider === 'cloudflare' || !useEmergentKey) && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
-                        <Key className="h-4 w-4" />
-                        <span>{provider === 'cloudflare' ? 'Cloudflare API Key' : 'Custom API Key'}</span>
-                      </label>
-                      <input
-                        type="password"
-                        value={apiKey}
-                        onChange={(e) => onApiKeyChange(e.target.value)}
-                        placeholder={provider === 'cloudflare' ? 'accountId:apiToken' : `Enter your ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key`}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                      {provider === 'cloudflare' && (
-                        <p className="text-xs text-gray-500 mt-1">Get your API key from Cloudflare dashboard: Workers & Pages → API tokens</p>
-                      )}
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                      <Key className="h-4 w-4" />
+                      <span>API Key</span>
+                    </label>
+                    <input
+                      type="password"
+                      value={apiKey}
+                      onChange={(e) => onApiKeyChange(e.target.value)}
+                      placeholder={provider === 'cloudflare' ? 'accountId:apiToken' : `Enter your ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key`}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    {provider === 'cloudflare' && (
+                      <p className="text-xs text-gray-500 mt-1">Get your API key from Cloudflare dashboard: Workers & Pages → API tokens</p>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -347,17 +325,6 @@ export const DomainEnrichment: React.FC<DomainEnrichmentProps> = ({
             </div>
           </div>
 
-          {useEmergentKey && provider !== 'perplexica' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start space-x-2">
-                <Sparkles className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-blue-800">
-                  <p className="font-medium mb-1">Using Emergent LLM Key</p>
-                  <p>No API key setup needed! The universal key works with both OpenAI and Claude.</p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
