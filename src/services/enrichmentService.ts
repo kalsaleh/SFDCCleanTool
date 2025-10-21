@@ -20,6 +20,12 @@ export class EnrichmentService {
     const totalRows = rows.length;
     let enrichedCount = 0;
 
+    console.log(`=== ENRICHMENT START ===`);
+    console.log(`Rows: ${rows.length}, Provider: ${provider}, Column: ${domainColumn}`);
+    console.log(`Has API key: ${!!customApiKey}, Use Emergent: ${useEmergentKey}`);
+    console.log(`Type: ${enrichmentType}, Fields: ${fields.join(', ')}`);
+    console.log(`========================`);
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const value = row[domainColumn];
@@ -106,11 +112,17 @@ export class EnrichmentService {
 
           this.cache.set(cacheKey, enrichment);
           enrichmentMap.set(i, enrichment);
-          if (enrichment.success) enrichedCount++;
+          if (enrichment.success) {
+            enrichedCount++;
+            console.log(`✓ Row ${i} enriched successfully: ${enrichment.companyName || value}`);
+          } else {
+            console.warn(`✗ Row ${i} enrichment failed: ${enrichment.error || 'Unknown error'}`);
+          }
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Enrichment failed';
-        console.error(`Error enriching row ${i} (${value}):`, errorMessage, error);
+        console.error(`❌ ENRICHMENT ERROR - Row ${i} (${value}): ${errorMessage}`);
+        console.error('Full error:', error);
         enrichmentMap.set(i, {
           domain: value || '',
           normalizedDomain: value || '',
