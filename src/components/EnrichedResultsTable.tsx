@@ -20,13 +20,19 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
-  // Filter to only show enriched rows
-  const enrichedRows = rows
+  // Get all enriched rows (both successful and failed)
+  const allEnrichedRows = rows
     .map((row, index) => ({ ...row, originalIndex: index }))
-    .filter((row) => {
-      const enrichment = enrichmentData.get(row.originalIndex);
-      return enrichment && enrichment.success;
-    });
+    .filter((row) => enrichmentData.has(row.originalIndex));
+
+  // Filter to only show successful enrichments
+  const enrichedRows = allEnrichedRows.filter((row) => {
+    const enrichment = enrichmentData.get(row.originalIndex);
+    return enrichment && enrichment.success;
+  });
+
+  // Count failures
+  const failedCount = allEnrichedRows.length - enrichedRows.length;
 
   const totalPages = Math.ceil(enrichedRows.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -57,6 +63,20 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {failedCount > 0 && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-yellow-800">
+                {enrichedRows.length} successful, {failedCount} failed
+              </p>
+              <p className="text-xs text-yellow-700 mt-1">
+                Check browser console for detailed error messages about failed enrichments
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Enriched Results</h3>
