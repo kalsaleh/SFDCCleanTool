@@ -17,6 +17,42 @@ export interface EnrichmentResult {
 
 export class DomainEnrichment {
   private static cache = new Map<string, EnrichmentResult>();
+  private static readonly REQUEST_TIMEOUT = 30000;
+  private static readonly MAX_RETRIES = 2;
+
+  private static async fetchWithTimeout(url: string, options: RequestInit, timeout: number = this.REQUEST_TIMEOUT): Promise<Response> {
+    return Promise.race([
+      fetch(url, options),
+      new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), timeout)
+      )
+    ]);
+  }
+
+  private static async fetchWithRetry(url: string, options: RequestInit, retries: number = this.MAX_RETRIES): Promise<Response> {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const response = await this.fetchWithTimeout(url, options);
+        if (response.ok || response.status === 400 || response.status === 401) {
+          return response;
+        }
+        if (i < retries) {
+          console.warn(`Request failed with status ${response.status}, retrying... (${i + 1}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        } else {
+          return response;
+        }
+      } catch (error) {
+        if (i < retries) {
+          console.warn(`Request failed: ${error instanceof Error ? error.message : 'Unknown error'}, retrying... (${i + 1}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        } else {
+          throw error;
+        }
+      }
+    }
+    throw new Error('Max retries exceeded');
+  }
 
   static extractDomain(email: string): string | null {
     const emailPattern = /[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
@@ -91,7 +127,7 @@ export class DomainEnrichment {
       ? `Research the company named "${domain}" thoroughly.`
       : `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await this.fetchWithRetry('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -160,7 +196,7 @@ export class DomainEnrichment {
       ? `Research the company named "${domain}" thoroughly.`
       : `Research the company with domain "${domain}" thoroughly. Visit their website, check company databases, and recent news.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await this.fetchWithRetry('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -258,7 +294,7 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
       ? `Research the company named "${domain}". Provide comprehensive information:`
       : `Research the company with domain "${domain}". Provide comprehensive information:`;
 
-    const response = await fetch(
+    const response = await this.fetchWithRetry(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
       {
         method: 'POST',
@@ -352,7 +388,7 @@ Return ONLY valid JSON.`
       ? `Conduct comprehensive research on the company named "${domain}".`
       : `Conduct comprehensive research on the company with domain "${domain}". Search their official website, company databases (LinkedIn, Crunchbase), and recent news articles.`;
 
-    const response = await fetch(apiUrl, {
+    const response = await this.fetchWithRetry(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

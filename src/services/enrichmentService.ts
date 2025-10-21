@@ -109,12 +109,13 @@ export class EnrichmentService {
           if (enrichment.success) enrichedCount++;
         }
       } catch (error) {
-        console.error(`Error enriching row ${i}:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Enrichment failed';
+        console.error(`Error enriching row ${i} (${value}):`, errorMessage, error);
         enrichmentMap.set(i, {
           domain: value || '',
           normalizedDomain: value || '',
           success: false,
-          error: error instanceof Error ? error.message : 'Enrichment failed',
+          error: errorMessage,
           provider
         });
       }
