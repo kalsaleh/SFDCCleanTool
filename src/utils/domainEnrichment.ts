@@ -228,12 +228,19 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
   ): Promise<EnrichmentResult> {
     console.log('Cloudflare AI: Enriching domain:', domain);
 
-    const accountId = apiKey.split(':')[0];
-    const token = apiKey.split(':')[1];
+    const parts = apiKey.split(':');
+    if (parts.length !== 2) {
+      throw new Error('Cloudflare API key must be in format "accountId:apiToken"');
+    }
+
+    const accountId = parts[0].trim();
+    const token = parts[1].trim();
 
     if (!accountId || !token) {
       throw new Error('Cloudflare API key must be in format "accountId:apiToken"');
     }
+
+    console.log('Using Cloudflare account:', accountId);
 
     const response = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
@@ -270,15 +277,22 @@ Return ONLY valid JSON.`
     );
 
     if (!response.ok) {
-      throw new Error(`Cloudflare AI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Cloudflare API error response:', errorText);
+      throw new Error(`Cloudflare AI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Cloudflare API response:', JSON.stringify(data, null, 2));
+
     const content = data.result?.response;
 
     if (!content) {
+      console.error('Cloudflare response structure:', data);
       throw new Error('No content in Cloudflare AI response');
     }
+
+    console.log('Cloudflare AI content:', content);
 
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
