@@ -1,4 +1,5 @@
 import { CSVRow } from '../types';
+import { EnrichmentCache, CachedEnrichment } from '../services/enrichmentCache';
 
 export interface EnrichmentResult {
   domain: string;
@@ -12,13 +13,14 @@ export interface EnrichmentResult {
   employeeCount?: string;
   revenue?: string;
   founded?: string;
-  provider?: 'openai' | 'perplexica' | 'claude' | 'cloudflare';
+  provider?: 'openai' | 'perplexica' | 'claude' | 'cloudflare' | 'local-llm';
 }
 
 export class DomainEnrichment {
   private static cache = new Map<string, EnrichmentResult>();
   private static readonly REQUEST_TIMEOUT = 30000;
   private static readonly MAX_RETRIES = 2;
+  private static useDbCache = true;
 
   private static async fetchWithTimeout(url: string, options: RequestInit, timeout: number = this.REQUEST_TIMEOUT): Promise<Response> {
     return Promise.race([
@@ -76,17 +78,48 @@ export class DomainEnrichment {
 
   static async enrichDomain(
     domain: string,
-    provider: 'openai' | 'perplexica' | 'claude' | 'cloudflare' = 'cloudflare',
+    provider: 'openai' | 'perplexica' | 'claude' | 'cloudflare' | 'local-llm' = 'cloudflare',
     apiKey?: string,
     extended: boolean = false,
     enrichmentType: 'domain' | 'company' = 'domain',
-    perplexicaUrl?: string
+    perplexicaUrl?: string,
+    localLlmUrl?: string,
+    localLlmModel?: string
   ): Promise<EnrichmentResult> {
     const normalized = enrichmentType === 'domain' ? this.normalizeDomain(domain) : domain.toLowerCase().trim();
     const cacheKey = `${normalized}-${provider}-${extended}-${enrichmentType}`;
 
+    // Check memory cache
     if (this.cache.has(cacheKey)) {
+      console.log(`Memory cache hit: ${domain}`);
       return this.cache.get(cacheKey)!;
+    }
+
+    // Check database cache
+    if (this.useDbCache) {
+      try {
+        const cached = await EnrichmentCache.get(normalized, provider, enrichmentType);
+        if (cached && cached.success) {
+          const result: EnrichmentResult = {
+            domain,
+            companyName: cached.company_name,
+            normalizedDomain: normalized,
+            success: cached.success,
+            headquarters: cached.headquarters,
+            description: cached.description,
+            industry: cached.industry,
+            employeeCount: cached.employee_count,
+            revenue: cached.revenue,
+            founded: cached.founded,
+            provider: cached.provider as any
+          };
+          this.cache.set(cacheKey, result);
+          console.log(`DB cache hit: ${domain} - saved API call!`);
+          return result;
+        }
+      } catch (error) {
+        console.warn('DB cache lookup failed:', error);
+      }
     }
 
     try {
@@ -98,6 +131,8 @@ export class DomainEnrichment {
         return await this.enrichWithCloudflare(domain, normalized, apiKey, cacheKey, enrichmentType);
       } else if (provider === 'perplexica' && perplexicaUrl) {
         return await this.enrichWithPerplexica(domain, normalized, perplexicaUrl, cacheKey, enrichmentType);
+      } else if (provider === 'local-llm' && localLlmUrl && localLlmModel) {
+        return await this.enrichWithLocalLLM(domain, normalized, localLlmUrl, localLlmModel, cacheKey, enrichmentType);
       } else {
         throw new Error(`Missing API key or URL for provider: ${provider}`);
       }
@@ -290,21 +325,9 @@ Return ONLY valid JSON. Be thorough and specific - this is for business intellig
 
     console.log('Using Cloudflare account:', accountId);
 
-    const queryText = enrichmentType === 'company'
-      ? `Research the company named "${domain}". Provide comprehensive information:`
-      : `Research the company with domain "${domain}". Provide comprehensive information:`;
-
-    const prompt = queryText + `
-
-1. **companyName**: Full official company name
-2. **headquarters**: Specific address format "City, State/Province, Country"
-3. **description**: Write 3-4 detailed sentences covering products/services, target market, what makes them unique, and business model
-4. **industry**: Be specific (e.g., "Enterprise SaaS - CRM" not just "Software")
-5. **employeeCount**: Use ranges: "1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"
-6. **revenue**: Annual revenue ranges: "<$1M", "$1M-5M", "$5M-10M", "$10M-50M", "$50M-100M", "$100M-500M", "$500M-1B", "$1B+"
-7. **founded**: Exact year (YYYY)
-
-Return ONLY valid JSON.`;
+    const prompt = enrichmentType === 'company'
+      ? `Company: "${domain}". JSON: {companyName, headquarters:"City, Country", description:"2 sentences", industry, employeeCount:"range", revenue:"range", founded:"year"}`
+      : `Domain: "${domain}". JSON: {companyName, headquarters:"City, Country", description:"2 sentences", industry, employeeCount:"range", revenue:"range", founded:"year"}`;
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -367,6 +390,7 @@ Return ONLY valid JSON.`;
         provider: 'cloudflare'
       };
       this.cache.set(cacheKey, result);
+      await this.saveToCache(result, 'cloudflare', enrichmentType);
       return result;
     } catch (parseError) {
       throw new Error('Failed to parse Cloudflare AI response');
@@ -465,6 +489,93 @@ Format your response as valid JSON only. Be thorough and accurate - this is for 
     } catch (parseError) {
       console.error('Perplexica parse error:', parseError);
       throw new Error('Failed to parse Perplexica response');
+    }
+  }
+
+  private static async enrichWithLocalLLM(
+    domain: string,
+    normalized: string,
+    localLlmUrl: string,
+    localLlmModel: string,
+    cacheKey: string,
+    enrichmentType: 'domain' | 'company' = 'domain'
+  ): Promise<EnrichmentResult> {
+    console.log(`Local LLM: Enriching ${enrichmentType}:`, domain);
+
+    const prompt = enrichmentType === 'company'
+      ? `Company: "${domain}". JSON: {companyName, headquarters:"City, Country", description:"2 sentences", industry, employeeCount:"range", revenue:"range", founded:"year"}`
+      : `Domain: "${domain}". JSON: {companyName, headquarters:"City, Country", description:"2 sentences", industry, employeeCount:"range", revenue:"range", founded:"year"}`;
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/local-llm-proxy`;
+
+    const response = await this.fetchWithRetry(
+      edgeFunctionUrl,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey
+        },
+        body: JSON.stringify({
+          url: localLlmUrl,
+          model: localLlmModel,
+          prompt
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Local LLM API error response:', errorText);
+      throw new Error(`Local LLM API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.response;
+
+    if (!content) {
+      throw new Error('No response from local LLM');
+    }
+
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.log('Local LLM: No JSON found in response');
+        const result: EnrichmentResult = {
+          domain,
+          companyName: this.generateFallbackCompanyName(domain),
+          normalizedDomain: normalized,
+          success: false,
+          provider: 'local-llm'
+        };
+        this.cache.set(cacheKey, result);
+        return result;
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      const result: EnrichmentResult = {
+        domain,
+        companyName: parsed.companyName || this.generateFallbackCompanyName(domain),
+        normalizedDomain: normalized,
+        success: true,
+        headquarters: parsed.headquarters,
+        description: parsed.description,
+        industry: parsed.industry,
+        employeeCount: parsed.employeeCount,
+        revenue: parsed.revenue,
+        founded: parsed.founded,
+        provider: 'local-llm'
+      };
+      this.cache.set(cacheKey, result);
+      await this.saveToCache(result, 'local-llm', enrichmentType);
+      console.log('Local LLM success:', result.companyName);
+      return result;
+    } catch (parseError) {
+      console.error('Local LLM parse error:', parseError);
+      throw new Error('Failed to parse local LLM response');
     }
   }
 
@@ -572,6 +683,31 @@ Format your response as valid JSON only. Be thorough and accurate - this is for 
     }
 
     return enrichmentMap;
+  }
+
+  private static async saveToCache(result: EnrichmentResult, provider: string, enrichmentType: 'domain' | 'company'): Promise<void> {
+    if (!this.useDbCache) return;
+
+    try {
+      const cached: CachedEnrichment = {
+        cache_key: EnrichmentCache.generateCacheKey(result.normalizedDomain, provider, enrichmentType),
+        domain: result.domain,
+        provider,
+        enrichment_type: enrichmentType,
+        company_name: result.companyName,
+        headquarters: result.headquarters,
+        description: result.description,
+        industry: result.industry,
+        employee_count: result.employeeCount,
+        revenue: result.revenue,
+        founded: result.founded,
+        success: result.success,
+        error_message: result.error
+      };
+      await EnrichmentCache.set(cached);
+    } catch (error) {
+      console.warn('Failed to save to cache:', error);
+    }
   }
 
   static findDomainMatches(enrichmentMap: Map<number, EnrichmentResult>): Map<string, number[]> {
