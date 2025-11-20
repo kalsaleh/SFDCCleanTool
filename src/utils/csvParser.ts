@@ -87,7 +87,8 @@ export class CSVParser {
     
     rows.forEach(row => {
       const values = headers.map(header => {
-        const value = row[header] || '';
+        const rawValue = row[header];
+        const value = String(rawValue ?? '');
         // Escape quotes and wrap in quotes if contains comma or quote
         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
           return `"${value.replace(/"/g, '""')}"`;

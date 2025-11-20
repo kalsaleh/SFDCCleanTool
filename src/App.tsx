@@ -9,6 +9,7 @@ import { EnrichedDataDisplay } from './components/EnrichedDataDisplay';
 import { EnrichedResultsTable } from './components/EnrichedResultsTable';
 import { ProcessingProgress } from './components/ProcessingProgress';
 import { MatchResults } from './components/MatchResults';
+import { CacheManagement } from './components/CacheManagement';
 import { CSVParser } from './utils/csvParser';
 import { FuzzyMatcher } from './utils/fuzzyMatcher';
 import { AIMatcher } from './utils/aiMatcher';
@@ -20,6 +21,7 @@ import * as XLSX from 'xlsx';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'setup' | 'results'>('setup');
+  const [resultsTab, setResultsTab] = useState<'enriched' | 'duplicates' | 'cache'>('enriched');
   const [csvData, setCsvData] = useState<{ headers: string[]; rows: CSVRow[] } | null>(null);
   const [availableColumns, setAvailableColumns] = useState<string[]>([]);
   const [filename, setFilename] = useState<string>('');
@@ -682,45 +684,103 @@ function App() {
           )}
 
           {/* Results Tab */}
-          {csvData && activeTab === 'results' && (
+          {activeTab === 'results' && (
             <>
-              {/* Enriched Results Table */}
-              {enrichmentData.size > 0 && (
-                <EnrichedResultsTable
-                  rows={csvData.rows}
-                  enrichmentData={enrichmentData}
-                  headers={csvData.headers}
-                  onExportCSV={exportCSV}
-                  onExportExcel={exportExcel}
-                />
+              {/* Sub-tabs for Results */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                <nav className="flex space-x-4 px-6 py-3 border-b border-gray-200">
+                  <button
+                    onClick={() => setResultsTab('enriched')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      resultsTab === 'enriched'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    Enriched Data ({enrichmentData.size})
+                  </button>
+                  <button
+                    onClick={() => setResultsTab('duplicates')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      resultsTab === 'duplicates'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    Duplicates ({matches.length})
+                  </button>
+                  <button
+                    onClick={() => setResultsTab('cache')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      resultsTab === 'cache'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    Cache Management
+                  </button>
+                </nav>
+              </div>
+
+              {/* Enriched Results */}
+              {resultsTab === 'enriched' && (
+                <>
+                  {enrichmentData.size > 0 && csvData ? (
+                    <EnrichedResultsTable
+                      rows={csvData.rows}
+                      enrichmentData={enrichmentData}
+                      headers={csvData.headers}
+                      onExportCSV={exportCSV}
+                      onExportExcel={exportExcel}
+                    />
+                  ) : (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                      <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Enriched Data Yet</h3>
+                      <p className="text-gray-600 mb-6">
+                        Upload a CSV and run enrichment in the Setup tab to see results here.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab('setup')}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Go to Setup
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Duplicate Results */}
-              {matches.length > 0 && (
-                <MatchResults
-                  matches={matches}
-                  onActionChange={handleActionChange}
-                  onBulkAction={handleBulkAction}
-                  onExport={exportCSV}
-                />
+              {resultsTab === 'duplicates' && (
+                <>
+                  {matches.length > 0 ? (
+                    <MatchResults
+                      matches={matches}
+                      onActionChange={handleActionChange}
+                      onBulkAction={handleBulkAction}
+                      onExport={exportCSV}
+                    />
+                  ) : (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                      <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Duplicates Found</h3>
+                      <p className="text-gray-600 mb-6">
+                        Upload a CSV and run duplicate detection in the Setup tab to see results here.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab('setup')}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Go to Setup
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* No Results Message */}
-              {enrichmentData.size === 0 && matches.length === 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-                  <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Results Yet</h3>
-                  <p className="text-gray-600 mb-6">
-                    Process your data in the Setup tab to see results here.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('setup')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Go to Setup
-                  </button>
-                </div>
-              )}
+              {/* Cache Management */}
+              {resultsTab === 'cache' && <CacheManagement />}
             </>
           )}
         </div>
