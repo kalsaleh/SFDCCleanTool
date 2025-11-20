@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Database, Search, Sparkles } from 'lucide-react';
+import { Check, Database, Search, Sparkles, Key } from 'lucide-react';
 
 interface ColumnSelectorProps {
   columns: string[];
@@ -7,6 +7,8 @@ interface ColumnSelectorProps {
   onColumnToggle: (column: string) => void;
   onSelectAll: () => void;
   onClearAll: () => void;
+  uniqueIdentifierColumn?: string;
+  onUniqueIdentifierChange?: (column: string) => void;
 }
 
 export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
@@ -14,7 +16,9 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   selectedColumns,
   onColumnToggle,
   onSelectAll,
-  onClearAll
+  onClearAll,
+  uniqueIdentifierColumn,
+  onUniqueIdentifierChange
 }) => {
   console.log('ColumnSelector - columns:', columns);
   console.log('ColumnSelector - selectedColumns:', selectedColumns);
@@ -57,6 +61,15 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
     return grouped;
   }, [columns]);
 
+  const identifierColumns = React.useMemo(() => {
+    return columns.filter(col => {
+      const lower = col.toLowerCase();
+      return lower.includes('id') || lower.includes('account') || lower.includes('sfdc') ||
+             lower.includes('salesforce') || lower.includes('crm') || lower.includes('number') ||
+             lower.includes('key') || lower.includes('code');
+    });
+  }, [columns]);
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -79,6 +92,38 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
           </button>
         </div>
       </div>
+
+      {onUniqueIdentifierChange && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center space-x-2 mb-3">
+            <Key className="h-5 w-5 text-blue-600" />
+            <h4 className="font-semibold text-gray-900">Unique Identifier Column</h4>
+          </div>
+          <p className="text-sm text-gray-700 mb-3">
+            Select a column that uniquely identifies each record (e.g., Account ID, SFDC ID).
+            This will make duplicate reports easier to read and clean up.
+          </p>
+          <select
+            value={uniqueIdentifierColumn || ''}
+            onChange={(e) => onUniqueIdentifierChange(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">No identifier selected</option>
+            <optgroup label="Suggested Identifiers">
+              {identifierColumns.map(col => (
+                <option key={col} value={col}>{col}</option>
+              ))}
+            </optgroup>
+            {columns.filter(col => !identifierColumns.includes(col)).length > 0 && (
+              <optgroup label="Other Columns">
+                {columns.filter(col => !identifierColumns.includes(col)).map(col => (
+                  <option key={col} value={col}>{col}</option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.entries(groupedColumns).map(([type, cols]) => (

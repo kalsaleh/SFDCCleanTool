@@ -81,7 +81,10 @@ export class EnrichmentService {
               provider,
               customApiKey,
               extended,
-              enrichmentType
+              enrichmentType,
+              perplexicaUrl,
+              undefined,
+              undefined
             );
 
             enrichment = {

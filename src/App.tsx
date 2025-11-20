@@ -362,33 +362,47 @@ function App() {
     const processedRows = csvData.rows.map((row, index) => {
       const matchAsOriginal = matches.find(match => match.originalRow === row);
       const matchAsDuplicate = matches.find(match => match.duplicateRow === row);
-      
+
       let duplicateStatus = '';
       let matchConfidence = '';
-      
+      let matchedAgainstColumn = '';
+      let matchedAgainstId = '';
+
       if (matchAsOriginal && matchAsOriginal.action === 'delete') {
         duplicateStatus = 'DELETE_ORIGINAL';
         matchConfidence = (matchAsOriginal.confidence * 100).toFixed(1) + '%';
+        matchedAgainstColumn = matchAsOriginal.matchedFields.join(', ');
+        matchedAgainstId = matchAsOriginal.duplicateIdentifier || '';
       } else if (matchAsDuplicate && matchAsDuplicate.action === 'delete') {
         duplicateStatus = 'DELETE_DUPLICATE';
         matchConfidence = (matchAsDuplicate.confidence * 100).toFixed(1) + '%';
+        matchedAgainstColumn = matchAsDuplicate.matchedFields.join(', ');
+        matchedAgainstId = matchAsDuplicate.originalIdentifier || '';
       } else if (matchAsOriginal && matchAsOriginal.action === 'merge') {
         duplicateStatus = 'MERGE_MASTER';
         matchConfidence = (matchAsOriginal.confidence * 100).toFixed(1) + '%';
+        matchedAgainstColumn = matchAsOriginal.matchedFields.join(', ');
+        matchedAgainstId = matchAsOriginal.duplicateIdentifier || '';
       } else if (matchAsDuplicate && matchAsDuplicate.action === 'merge') {
         duplicateStatus = 'MERGE_INTO_MASTER';
         matchConfidence = (matchAsDuplicate.confidence * 100).toFixed(1) + '%';
+        matchedAgainstColumn = matchAsDuplicate.matchedFields.join(', ');
+        matchedAgainstId = matchAsDuplicate.originalIdentifier || '';
       } else if (matchAsOriginal || matchAsDuplicate) {
         const match = matchAsOriginal || matchAsDuplicate;
         duplicateStatus = match!.action.toUpperCase();
         matchConfidence = (match!.confidence * 100).toFixed(1) + '%';
+        matchedAgainstColumn = match!.matchedFields.join(', ');
+        matchedAgainstId = matchAsOriginal ? match!.duplicateIdentifier || '' : match!.originalIdentifier || '';
       }
-      
+
       const enrichment = enrichmentData.get(index);
       const result: any = {
         ...row,
         'DUPLICATE_STATUS': duplicateStatus,
-        'MATCH_CONFIDENCE': matchConfidence
+        'MATCH_CONFIDENCE': matchConfidence,
+        'MATCHED_ON_COLUMNS': matchedAgainstColumn,
+        'MATCHED_AGAINST_ID': matchedAgainstId
       };
 
       if (config.domainEnrichment && enrichment) {
@@ -583,6 +597,8 @@ function App() {
                     onColumnToggle={handleColumnToggle}
                     onSelectAll={handleSelectAllColumns}
                     onClearAll={handleClearAllColumns}
+                    uniqueIdentifierColumn={config.uniqueIdentifierColumn}
+                    onUniqueIdentifierChange={(column) => setConfig(prev => ({ ...prev, uniqueIdentifierColumn: column }))}
                   />
                   <MatchingConfig config={config} onConfigChange={setConfig} />
                 </div>

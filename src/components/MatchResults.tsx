@@ -257,7 +257,14 @@ export const MatchResults: React.FC<MatchResultsProps> = ({
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <div className="font-medium text-gray-900 mb-1">Original Record</div>
+                    <div className="font-medium text-gray-900 mb-1">
+                      Original Record
+                      {match.originalIdentifier && (
+                        <span className="ml-2 text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                          ID: {match.originalIdentifier}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-gray-600 space-y-1">
                       {match.matchedFields.slice(0, 2).map(field => (
                         <div key={field}>
@@ -267,7 +274,14 @@ export const MatchResults: React.FC<MatchResultsProps> = ({
                     </div>
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900 mb-1">Duplicate Record</div>
+                    <div className="font-medium text-gray-900 mb-1">
+                      Duplicate Record
+                      {match.duplicateIdentifier && (
+                        <span className="ml-2 text-xs font-normal text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                          ID: {match.duplicateIdentifier}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-gray-600 space-y-1">
                       {match.matchedFields.slice(0, 2).map(field => (
                         <div key={field}>

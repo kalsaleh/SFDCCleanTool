@@ -11,6 +11,8 @@ export interface MatchResult {
   matchedFields: string[];
   hierarchyType?: 'global_parent' | 'regional_parent' | 'subsidiary' | 'unknown';
   action: 'keep' | 'merge' | 'delete' | 'pending';
+  originalIdentifier?: string;
+  duplicateIdentifier?: string;
 }
 
 export interface MatchingConfig {
@@ -29,6 +31,7 @@ export interface MatchingConfig {
   extendedEnrichment: boolean;
   enrichmentFields: string[];
   operationMode: 'enrich-only' | 'duplicates-only' | 'both';
+  uniqueIdentifierColumn?: string;
 }
 
 export interface ProcessingStats {

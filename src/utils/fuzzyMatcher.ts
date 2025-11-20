@@ -139,6 +139,9 @@ export class FuzzyMatcher {
 
     const hierarchyType = config.hierarchyDetection ? this.detectHierarchyType(row1) : undefined;
 
+    const originalIdentifier = config.uniqueIdentifierColumn ? row1[config.uniqueIdentifierColumn] : undefined;
+    const duplicateIdentifier = config.uniqueIdentifierColumn ? row2[config.uniqueIdentifierColumn] : undefined;
+
     return {
       id,
       originalRow: row1,
@@ -147,7 +150,9 @@ export class FuzzyMatcher {
       matchType: confidence > 0.95 ? 'exact' : 'fuzzy',
       matchedFields,
       hierarchyType,
-      action: 'pending'
+      action: 'pending',
+      originalIdentifier,
+      duplicateIdentifier
     };
   }
 }
