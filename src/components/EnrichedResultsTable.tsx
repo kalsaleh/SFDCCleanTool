@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText, Database, Zap } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface EnrichedResultsTableProps {
@@ -31,8 +31,13 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
     return enrichment && enrichment.success;
   });
 
-  // Count failures
+  // Count failures and cache hits
   const failedCount = allEnrichedRows.length - enrichedRows.length;
+  const cachedCount = enrichedRows.filter((row) => {
+    const enrichment = enrichmentData.get(row.originalIndex);
+    return enrichment?.fromCache === true;
+  }).length;
+  const freshCount = enrichedRows.length - cachedCount;
 
   const totalPages = Math.ceil(enrichedRows.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -63,16 +68,40 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {failedCount > 0 && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      {/* Cache performance banner */}
+      {enrichedRows.length > 0 && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-yellow-800">
-                {enrichedRows.length} successful, {failedCount} failed
-              </p>
-              <p className="text-xs text-yellow-700 mt-1">
-                Check browser console for detailed error messages about failed enrichments
-              </p>
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <Database className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">
+                    {cachedCount} from cache
+                  </p>
+                  <p className="text-xs text-blue-700">Instant retrieval</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Zap className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-green-900">
+                    {freshCount} fresh enrichments
+                  </p>
+                  <p className="text-xs text-green-700">New API calls</p>
+                </div>
+              </div>
+              {failedCount > 0 && (
+                <div className="flex items-center space-x-2">
+                  <div className="h-5 w-5 flex items-center justify-center text-yellow-600 font-bold">!</div>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-900">
+                      {failedCount} failed
+                    </p>
+                    <p className="text-xs text-yellow-700">Check console</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -113,6 +142,9 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Source
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Original Data
                   </th>
                   {enrichedColumns.map((col) => (
@@ -130,6 +162,19 @@ export const EnrichedResultsTable: React.FC<EnrichedResultsTableProps> = ({
                   const enrichment = enrichmentData.get(row.originalIndex);
                   return (
                     <tr key={idx} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm">
+                        {enrichment?.fromCache ? (
+                          <div className="flex items-center space-x-1">
+                            <Database className="h-4 w-4 text-blue-600" />
+                            <span className="text-xs font-medium text-blue-700">Cache</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-1">
+                            <Zap className="h-4 w-4 text-green-600" />
+                            <span className="text-xs font-medium text-green-700">Fresh</span>
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         <div className="space-y-1">
                           {headers.slice(0, 2).map((header) => (

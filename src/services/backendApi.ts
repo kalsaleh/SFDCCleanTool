@@ -33,6 +33,7 @@ export interface EnrichmentResponse {
   companyStage?: string;
   tickerSymbol?: string;
   provider: string;
+  fromCache?: boolean;
 }
 
 export class BackendApi {

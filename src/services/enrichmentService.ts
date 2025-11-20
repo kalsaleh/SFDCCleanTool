@@ -67,9 +67,10 @@ export class EnrichmentService {
         const cacheKey = `${normalized}-${provider}-${fields.join(',')}-${enrichmentType}`;
 
         if (this.cache.has(cacheKey)) {
-          const cachedResult = this.cache.get(cacheKey)!;
+          const cachedResult = { ...this.cache.get(cacheKey)!, fromCache: true };
           enrichmentMap.set(i, cachedResult);
           if (cachedResult.success) enrichedCount++;
+          console.log(`💾 Row ${i} loaded from cache: ${cachedResult.companyName || value}`);
         } else {
           let enrichment: EnrichmentResponse;
 
@@ -105,7 +106,8 @@ export class EnrichmentService {
               employeeCount: result.employeeCount,
               revenue: result.revenue,
               founded: result.founded,
-              provider: result.provider || provider
+              provider: result.provider || provider,
+              fromCache: false
             };
           } else {
             // Call backend API for openai, claude, perplexica
