@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloudflare Enrichment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .loading {
+            color: #0066cc;
+            font-weight: bold;
+        }
+        .error {
+            color: #cc0000;
+            font-weight: bold;
+        }
+        .success {
+            color: #00cc00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cloudflare AI Enrichment Test</h1>
+
+        <label>Domain or Company Name:</label>
+        <input type="text" id="domain" value="salesforce.com" placeholder="Enter domain (e.g., salesforce.com)">
+
+        <label>Enrichment Type:</label>
+        <select id="enrichmentType">
+            <option value="domain">Domain</option>
+            <option value="company">Company</option>
+        </select>
+
+        <button onclick="testEnrichment()">Test Enrichment</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const CLOUDFLARE_API_KEY = '41b6e9b4d163cec11e99d1fdd3579c0b:Y43SuE4Q1gOmCxA-h-izoqCvxIQWloUp-M1gTTg0';
+        const SUPABASE_URL = 'https://zrpzkytyvvcqfqsshujj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpycHpreXR5dnZjcWZxc3NodWpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwNDY1NTQsImV4cCI6MjA3NTYyMjU1NH0.XjcaRmR0F2eHefskBcmoBNuwmDDbdViSvjSsEvwGfao';
+
+        async function testEnrichment() {
+            const domain = document.getElementById('domain').value;
+            const enrichmentType = document.getElementById('enrichmentType').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!domain) {
+                resultDiv.innerHTML = '<span class="error">Please enter a domain or company name</span>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<span class="loading">Testing enrichment...</span>';
+
+            try {
+                console.log('Starting enrichment test...');
+                console.log('Domain:', domain);
+                console.log('Type:', enrichmentType);
+
+                const parts = CLOUDFLARE_API_KEY.split(':');
+                const accountId = parts[0];
+                const apiToken = parts[1];
+
+                console.log('Account ID:', accountId);
+
+                const prompt = enrichmentType === 'company'
+                    ? `Company: "${domain}". JSON: {companyName, headquarters:"City, Country", description:"2 sentences", industry, employeeCount:"range", revenue:"range", founded:"year"}`
+                    : `Domain: "${domain}". JSON: {companyName, headquarters:"City, Country", description:"2 sentences", industry, employeeCount:"range", revenue:"range", founded:"year"}`;
+
+                console.log('Prompt:', prompt);
+
+                const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/cloudflare-ai-proxy`;
+                console.log('Calling edge function:', edgeFunctionUrl);
+
+                const response = await fetch(edgeFunctionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY
+                    },
+                    body: JSON.stringify({
+                        accountId,
+                        apiToken,
+                        prompt,
+                        model: '@cf/meta/llama-3.1-8b-instruct'
+                    })
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    resultDiv.innerHTML = `<span class="error">Error: ${response.status}\n${errorText}</span>`;
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                const content = data.result?.response;
+
+                if (!content) {
+                    resultDiv.innerHTML = `<span class="error">No content in response\n${JSON.stringify(data, null, 2)}</span>`;
+                    return;
+                }
+
+                console.log('AI Response:', content);
+
+                // Try to extract JSON
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    try {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        resultDiv.innerHTML = `<span class="success">SUCCESS!</span>\n\nRaw AI Response:\n${content}\n\nParsed JSON:\n${JSON.stringify(parsed, null, 2)}`;
+                    } catch (parseError) {
+                        resultDiv.innerHTML = `<span class="error">JSON Parse Error</span>\n\nRaw Response:\n${content}\n\nError: ${parseError.message}`;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<span class="error">No JSON found in response</span>\n\nRaw Response:\n${content}`;
+                }
+
+            } catch (error) {
+                console.error('Test error:', error);
+                resultDiv.innerHTML = `<span class="error">Error: ${error.message}\n\nCheck browser console for details</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

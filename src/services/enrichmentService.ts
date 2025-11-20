@@ -75,6 +75,10 @@ export class EnrichmentService {
 
           // Use frontend enrichment for cloudflare
           if (provider === 'cloudflare') {
+            console.log(`[EnrichmentService] Cloudflare enrichment for: ${domain}`);
+            console.log(`[EnrichmentService] API Key provided: ${!!customApiKey}`);
+            console.log(`[EnrichmentService] Fields: ${fields.join(', ')}`);
+
             const extended = fields.length > 0;
             const result = await DomainEnrichment.enrichDomain(
               domain,
@@ -86,6 +90,8 @@ export class EnrichmentService {
               undefined,
               undefined
             );
+
+            console.log(`[EnrichmentService] Cloudflare result:`, result);
 
             enrichment = {
               domain: result.domain,
