@@ -614,7 +614,19 @@ function App() {
                   enrichmentType={config.enrichmentType || 'domain'}
                   onEnrichmentTypeChange={(type) => setConfig(prev => ({ ...prev, enrichmentType: type }))}
                   provider={config.enrichmentProvider}
-                  onProviderChange={(provider) => setConfig(prev => ({ ...prev, enrichmentProvider: provider }))}
+                  onProviderChange={(provider) => {
+                    // Map enrichment provider to AI provider
+                    let aiProvider: 'openai' | 'anthropic' | 'local' = 'local';
+                    if (provider === 'openai') aiProvider = 'openai';
+                    else if (provider === 'claude') aiProvider = 'anthropic';
+                    else if (provider === 'cloudflare' || provider === 'perplexica') aiProvider = 'local';
+
+                    setConfig(prev => ({
+                      ...prev,
+                      enrichmentProvider: provider,
+                      aiProvider // Sync AI Enhancement provider
+                    }));
+                  }}
                   apiKey={config.enrichmentApiKey || ''}
                   onApiKeyChange={(apiKey) => setConfig(prev => ({ ...prev, enrichmentApiKey: apiKey }))}
                   perplexicaUrl={config.perplexicaUrl}
